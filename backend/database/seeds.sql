@@ -1,14 +1,10 @@
 -- Seeds: Dados iniciais para testes
--- Execute este arquivo após criar o schema
-\ c fala_torcedor;
--- Inserir equipes de exemplo
 INSERT INTO equipes (nome, serie, quantidade_socios)
 VALUES ('Flamengo', 'Série A', 45000),
     ('Corinthians', 'Série A', 38000),
     ('Palmeiras', 'Série A', 42000),
     ('São Paulo', 'Série A', 35000),
     ('Vasco da Gama', 'Série B', 28000);
--- Inserir torcedores de exemplo
 INSERT INTO torcedores (
         nome,
         cpf,
@@ -21,63 +17,63 @@ VALUES (
         '12345678901',
         '1990-05-15',
         1,
-        'Diamante'
+        'Sócio Diamante'::plano_socio
     ),
     (
         'Maria Santos',
         '23456789012',
         '1985-08-22',
         1,
-        'Ouro'
+        'Sócio Ouro'::plano_socio
     ),
     (
         'João Oliveira',
         '34567890123',
         '1992-03-10',
         2,
-        'Prata'
+        'Sócio Prata'::plano_socio
     ),
     (
         'Ana Costa',
         '45678901234',
         '1988-11-30',
         2,
-        'Ouro'
+        'Sócio Ouro'::plano_socio
     ),
     (
         'Pedro Souza',
         '56789012345',
         '1995-07-18',
         3,
-        'Diamante'
+        'Sócio Diamante'::plano_socio
     ),
     (
         'Juliana Lima',
         '67890123456',
         '1991-02-25',
         3,
-        'Prata'
+        'Sócio Prata'::plano_socio
     ),
     (
         'Fernando Alves',
         '78901234567',
         '1987-09-14',
         4,
-        'Ouro'
+        'Sócio Ouro'::plano_socio
     ),
     (
         'Beatriz Rocha',
         '89012345678',
         '1993-12-05',
         5,
-        'Prata'
+        'Sócio Prata'::plano_socio
     );
--- Verificar inserções
 SELECT 'Equipes cadastradas:' AS info;
 SELECT id,
     nome,
     serie,
-    quantidade_socios
+    quantidade_socios,
+    planos_socio
 FROM equipes
 ORDER BY id;
 SELECT 'Torcedores cadastrados:' AS info;

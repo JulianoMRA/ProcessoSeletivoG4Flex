@@ -11,9 +11,7 @@ Armazena informações das equipes de futebol.
 | nome | VARCHAR(100) | Nome da equipe |
 | serie | VARCHAR(10) | Divisão do clube (Série A, B, C ou D) |
 | quantidade_socios | INTEGER | Quantidade de sócios-torcedores |
-| planos_socio | JSONB | Array com 3 planos: Prata, Ouro, Diamante |
-| criado_em | TIMESTAMP | Data/hora de criação |
-| atualizado_em | TIMESTAMP | Data/hora da última atualização |
+| planos_socio | plano_socio[] | Array com os planos oferecidos (padrão: todos os 3) |
 
 ### Tabela: torcedores
 Armazena informações dos torcedores cadastrados.
@@ -21,21 +19,34 @@ Armazena informações dos torcedores cadastrados.
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
 | id | SERIAL | Identificador único |
-| nome | VARCHAR(100) | Nome do torcedor |
+| nome | VARCHAR(100) | Nome do torcedor (obrigatório) |
 | cpf | VARCHAR(11) | CPF (apenas números, único) |
 | data_nascimento | DATE | Data de nascimento |
 | equipe_id | INTEGER | Referência para equipes.id |
-| plano_socio | VARCHAR(50) | Plano assinado (Prata, Ouro ou Diamante) |
-| criado_em | TIMESTAMP | Data/hora de criação |
-| atualizado_em | TIMESTAMP | Data/hora da última atualização |
+| plano_socio | plano_socio | Plano assinado (ENUM: Sócio Prata, Sócio Ouro ou Sócio Diamante) |
+
+## Tipo ENUM: plano_socio
+
+Definido como tipo personalizado no PostgreSQL para garantir consistência:
+
+```sql
+CREATE TYPE plano_socio AS ENUM ('Sócio Prata', 'Sócio Ouro', 'Sócio Diamante');
+```
+
+**Vantagens**:
+- Validação automática dos valores
+- Melhor performance que VARCHAR
+- Impossível inserir valores inválidos
 
 ## Planos de Sócio
 
-| Plano | Cor | Benefícios |
-|-------|-----|------------|
-| Prata | Cinza (#C0C0C0) | Desconto de 10%, Prioridade na compra de ingressos |
-| Ouro | Dourado (#FFD700) | Desconto de 20%, Acesso prioritário, Brinde exclusivo |
-| Diamante | Azul (#4169E1) | Desconto de 30%, Acesso VIP, Meet & Greet |
+Os planos disponíveis são:
+- **Sócio Prata** (cor: #C0C0C0 - Cinza)
+- **Sócio Ouro** (cor: #FFD700 - Dourado)
+- **Sócio Diamante** (cor: #4169E1 - Azul)
+
+Cada equipe, por padrão, oferece os 3 planos. O torcedor escolhe um ao se cadastrar.
+
 
 ## Como Executar
 
@@ -71,12 +82,6 @@ SELECT * FROM torcedores;
 \q
 ```
 
-## Relacionamentos
-
-- Um torcedor pertence a **uma** equipe (equipe_id)
-- Uma equipe pode ter **vários** torcedores
-- Se uma equipe for excluída, seus torcedores também são excluídos (CASCADE)
-
 ## Validações
 
 ### Tabela equipes
@@ -89,4 +94,4 @@ SELECT * FROM torcedores;
 - `cpf`: obrigatório, único, deve ter exatamente 11 caracteres
 - `data_nascimento`: deve ser anterior à data atual
 - `equipe_id`: deve existir na tabela equipes
-- `plano_socio`: deve ser 'Prata', 'Ouro' ou 'Diamante'
+- `plano_socio`: deve ser um dos valores do ENUM ('Sócio Prata', 'Sócio Ouro', 'Sócio Diamante')
