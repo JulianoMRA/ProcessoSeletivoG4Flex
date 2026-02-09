@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
+import 'package:fala_torcedor/views/torcedores/torcedores_list_view.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -44,9 +45,10 @@ class HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () {
-                // TODO: Navegar para TorcedoresListView (Fase 5)
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TorcedoresListView()),
+              ),
               icon: const Icon(Icons.people),
               label: const Text('Torcedores'),
               style: FilledButton.styleFrom(
