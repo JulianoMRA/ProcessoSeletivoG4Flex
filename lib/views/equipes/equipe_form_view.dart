@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
+import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 
 class EquipeFormView extends StatefulWidget {
@@ -122,7 +123,9 @@ class _EquipeFormViewState extends State<EquipeFormView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Descartar alterações?'),
-        content: const Text('Você tem alterações não salvas. Deseja descartá-las?'),
+        content: const Text(
+          'Você tem alterações não salvas. Deseja descartá-las?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -151,86 +154,137 @@ class _EquipeFormViewState extends State<EquipeFormView> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_editando ? 'Editar Equipe' : 'Nova Equipe'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _nomeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nome da equipe',
-                  border: OutlineInputBorder(),
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildSectionTitle('Informações'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nomeCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome da equipe',
+                    prefixIcon: Icon(Icons.shield_outlined),
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Informe o nome' : null,
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Informe o nome' : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _serieSelecionada,
-                decoration: const InputDecoration(
-                  labelText: 'Série',
-                  border: OutlineInputBorder(),
-                ),
-                items: _series
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
-                onChanged: (v) => setState(() {
-                  _serieSelecionada = v!;
-                  _modificado = true;
-                }),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _qtdSociosCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Quantidade de sócios',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Informe a quantidade';
-                  if (int.tryParse(v.trim()) == null) return 'Número inválido';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Planos de sócio',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              _buildPlanoField(_plano1Ctrl, 'Plano 1'),
-              const SizedBox(height: 12),
-              _buildPlanoField(_plano2Ctrl, 'Plano 2'),
-              const SizedBox(height: 12),
-              _buildPlanoField(_plano3Ctrl, 'Plano 3'),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _salvando ? null : _salvar,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _salvando
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _serieSelecionada,
+                  decoration: const InputDecoration(
+                    labelText: 'Série',
+                    prefixIcon: Icon(Icons.emoji_events_outlined),
+                  ),
+                  items: _series
+                      .map(
+                        (s) => DropdownMenuItem(
+                          value: s,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                margin: const EdgeInsets.only(right: 10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.corSerie(s),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              Text(s),
+                            ],
+                          ),
                         ),
                       )
-                    : Text(_editando ? 'Salvar alterações' : 'Criar equipe'),
-              ),
-            ],
+                      .toList(),
+                  onChanged: (v) => setState(() {
+                    _serieSelecionada = v!;
+                    _modificado = true;
+                  }),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _qtdSociosCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade de sócios',
+                    prefixIcon: Icon(Icons.people_outline),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Informe a quantidade';
+                    }
+                    if (int.tryParse(v.trim()) == null) {
+                      return 'Número inválido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 28),
+                _buildSectionTitle('Planos de sócio'),
+                const SizedBox(height: 12),
+                _buildPlanoField(_plano1Ctrl, 'Plano 1'),
+                const SizedBox(height: 12),
+                _buildPlanoField(_plano2Ctrl, 'Plano 2'),
+                const SizedBox(height: 12),
+                _buildPlanoField(_plano3Ctrl, 'Plano 3'),
+                const SizedBox(height: 32),
+                FilledButton(
+                  onPressed: _salvando ? null : _salvar,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                  ),
+                  child: _salvando
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _editando ? 'Salvar alterações' : 'Criar equipe',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
-      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -239,8 +293,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
       controller: ctrl,
       decoration: InputDecoration(
         labelText: label,
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.card_membership),
+        prefixIcon: const Icon(Icons.card_membership_outlined),
       ),
       validator: (v) =>
           v == null || v.trim().isEmpty ? 'Informe o nome do plano' : null,

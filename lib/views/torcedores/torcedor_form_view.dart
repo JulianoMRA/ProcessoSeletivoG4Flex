@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
+import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
@@ -152,6 +153,7 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
       sucesso = await _controller.atualizarTorcedor(
         widget.torcedor!.id!,
         torcedor,
+        equipeIdAnterior: widget.torcedor!.equipeId,
       );
     } else {
       sucesso = await _controller.criarTorcedor(torcedor);
@@ -162,7 +164,9 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
     if (sucesso && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_editando ? 'Torcedor atualizado!' : 'Torcedor criado!'),
+          content: Text(
+            _editando ? 'Torcedor atualizado!' : 'Torcedor criado!',
+          ),
         ),
       );
       Navigator.pop(context, true);
@@ -180,7 +184,9 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Descartar alterações?'),
-        content: const Text('Você tem alterações não salvas. Deseja descartá-las?'),
+        content: const Text(
+          'Você tem alterações não salvas. Deseja descartá-las?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -209,38 +215,42 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_editando ? 'Editar Torcedor' : 'Novo Torcedor'),
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         ),
         body: _carregando
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      _buildSectionTitle('Dados pessoais'),
+                      const SizedBox(height: 12),
                       TextFormField(
                         controller: _nomeCtrl,
                         decoration: const InputDecoration(
                           labelText: 'Nome',
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Informe o nome' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Informe o nome'
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _cpfCtrl,
                         decoration: const InputDecoration(
                           labelText: 'CPF',
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.badge_outlined),
                           hintText: '000.000.000-00',
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [_cpfMask],
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Informe o CPF';
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Informe o CPF';
+                          }
                           if (_cpfMask.getUnmaskedText().length != 11) {
                             return 'CPF deve ter 11 dígitos';
                           }
@@ -248,30 +258,46 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      OutlinedButton.icon(
-                        onPressed: _selecionarData,
-                        icon: const Icon(Icons.calendar_today),
-                        label: Text(
-                          _nascimento != null
-                              ? DateFormat('dd/MM/yyyy').format(_nascimento!)
-                              : 'Selecionar data de nascimento',
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                      GestureDetector(
+                        onTap: _selecionarData,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Data de nascimento',
+                            prefixIcon: Icon(Icons.cake_outlined),
+                            suffixIcon: Icon(
+                              Icons.calendar_today_rounded,
+                              size: 20,
+                            ),
+                          ),
+                          child: Text(
+                            _nascimento != null
+                                ? DateFormat('dd/MM/yyyy').format(_nascimento!)
+                                : 'Selecionar',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: _nascimento != null
+                                  ? AppColors.textPrimary
+                                  : AppColors.textHint,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 28),
+                      _buildSectionTitle('Associação'),
+                      const SizedBox(height: 12),
                       DropdownButtonFormField<Equipe>(
-                        initialValue: _equipeSelecionada,
+                        value: _equipeSelecionada,
                         decoration: const InputDecoration(
                           labelText: 'Equipe',
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.shield_outlined),
                         ),
                         items: _controller.equipes
-                            .map((e) => DropdownMenuItem(
-                                  value: e,
-                                  child: Text(e.nome),
-                                ))
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e.nome),
+                              ),
+                            )
                             .toList(),
                         onChanged: (equipe) {
                           setState(() {
@@ -284,20 +310,23 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                             _controller.carregarPlanos(equipe.id!);
                           }
                         },
-                        validator: (v) => v == null ? 'Selecione uma equipe' : null,
+                        validator: (v) =>
+                            v == null ? 'Selecione uma equipe' : null,
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<Plano>(
-                        initialValue: _planoSelecionado,
+                        value: _planoSelecionado,
                         decoration: const InputDecoration(
                           labelText: 'Plano de sócio',
-                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.card_membership_outlined),
                         ),
                         items: _controller.planosDisponiveis
-                            .map((p) => DropdownMenuItem(
-                                  value: p,
-                                  child: Text(p.nome),
-                                ))
+                            .map(
+                              (p) => DropdownMenuItem(
+                                value: p,
+                                child: Text(p.nome),
+                              ),
+                            )
                             .toList(),
                         onChanged: (plano) {
                           setState(() {
@@ -305,13 +334,14 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                             _modificado = true;
                           });
                         },
-                        validator: (v) => v == null ? 'Selecione um plano' : null,
+                        validator: (v) =>
+                            v == null ? 'Selecione um plano' : null,
                       ),
                       const SizedBox(height: 32),
                       FilledButton(
                         onPressed: _salvando ? null : _salvar,
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                         ),
                         child: _salvando
                             ? const SizedBox(
@@ -322,13 +352,46 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(_editando ? 'Salvar alterações' : 'Criar torcedor'),
+                            : Text(
+                                _editando
+                                    ? 'Salvar alterações'
+                                    : 'Criar torcedor',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

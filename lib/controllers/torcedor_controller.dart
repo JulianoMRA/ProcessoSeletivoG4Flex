@@ -68,9 +68,20 @@ class TorcedorController extends ChangeNotifier {
     }
   }
 
-  Future<bool> atualizarTorcedor(String id, Torcedor torcedor) async {
+  Future<bool> atualizarTorcedor(
+    String id,
+    Torcedor torcedor, {
+    String? equipeIdAnterior,
+  }) async {
     try {
       await _service.updateTorcedor(id, torcedor);
+
+      if (equipeIdAnterior != null &&
+          equipeIdAnterior != torcedor.equipeId) {
+        await _service.atualizarQtdSocios(equipeIdAnterior, -1);
+        await _service.atualizarQtdSocios(torcedor.equipeId, 1);
+      }
+
       await carregarTorcedores();
       return true;
     } catch (e) {

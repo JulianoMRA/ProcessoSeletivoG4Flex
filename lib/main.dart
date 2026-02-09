@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fala_torcedor/core/constants.dart';
+import 'package:fala_torcedor/core/theme.dart';
 import 'package:fala_torcedor/views/home_view.dart';
 
 void main() async {
@@ -30,14 +31,8 @@ class FalaTorcedorApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('pt', 'BR'),
-        Locale('en'),
-      ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
+      supportedLocales: const [Locale('pt', 'BR'), Locale('en')],
+      theme: AppTheme.light,
       home: const HomeView(),
     );
   }
