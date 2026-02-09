@@ -116,6 +116,24 @@ class SupabaseService {
     await supabase.from('torcedores').delete().eq('id', id);
   }
 
+  Future<bool> cpfJaExiste(String cpf, {String? ignorarId}) async {
+    var query = supabase.from('torcedores').select('id').eq('cpf', cpf);
+    if (ignorarId != null) {
+      query = query.neq('id', ignorarId);
+    }
+    final response = await query;
+    return (response as List).isNotEmpty;
+  }
+
+  Future<void> atualizarQtdSocios(String equipeId, int incremento) async {
+    final equipe = await getEquipeById(equipeId);
+    final novaQtd = equipe.qtdSocios + incremento;
+    await supabase
+        .from('equipes')
+        .update({'qtd_socios': novaQtd})
+        .eq('id', equipeId);
+  }
+
   // PLANOS
 
   Future<List<Plano>> getPlanosByEquipe(String equipeId) async {

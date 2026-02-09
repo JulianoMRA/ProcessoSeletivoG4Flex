@@ -94,6 +94,9 @@ class TorcedorDetailView extends StatelessWidget {
 
               if (context.mounted) {
                 if (sucesso) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Torcedor excluído!')),
+                  );
                   Navigator.pop(context, true);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

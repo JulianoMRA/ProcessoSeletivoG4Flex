@@ -3,7 +3,7 @@ import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 
 class EquipeFormView extends StatefulWidget {
-  final Equipe? equipe; // null = criando, preenchido = editando
+  final Equipe? equipe;
 
   const EquipeFormView({super.key, this.equipe});
 
@@ -23,6 +23,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
 
   String _serieSelecionada = 'Série A';
   bool _salvando = false;
+  bool _modificado = false;
 
   bool get _editando => widget.equipe != null;
 
@@ -48,6 +49,16 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     _plano3Ctrl = TextEditingController(
       text: eq != null && eq.planos.length > 2 ? eq.planos[2].nome : '',
     );
+
+    _nomeCtrl.addListener(_marcarModificado);
+    _qtdSociosCtrl.addListener(_marcarModificado);
+    _plano1Ctrl.addListener(_marcarModificado);
+    _plano2Ctrl.addListener(_marcarModificado);
+    _plano3Ctrl.addListener(_marcarModificado);
+  }
+
+  void _marcarModificado() {
+    if (!_modificado) setState(() => _modificado = true);
   }
 
   @override
@@ -91,6 +102,11 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     setState(() => _salvando = false);
 
     if (sucesso && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_editando ? 'Equipe atualizada!' : 'Equipe criada!'),
+        ),
+      );
       Navigator.pop(context, true);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,14 +115,45 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     }
   }
 
+  Future<bool> _confirmarSaida() async {
+    if (!_modificado) return true;
+
+    final sair = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('Você tem alterações não salvas. Deseja descartá-las?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Continuar editando'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+
+    return sair ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_editando ? 'Editar Equipe' : 'Nova Equipe'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: SingleChildScrollView(
+    return PopScope(
+      canPop: !_modificado,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final sair = await _confirmarSaida();
+        if (sair && context.mounted) Navigator.pop(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_editando ? 'Editar Equipe' : 'Nova Equipe'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -132,7 +179,10 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                 items: _series
                     .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                     .toList(),
-                onChanged: (v) => setState(() => _serieSelecionada = v!),
+                onChanged: (v) => setState(() {
+                  _serieSelecionada = v!;
+                  _modificado = true;
+                }),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -179,6 +229,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

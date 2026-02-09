@@ -47,9 +47,18 @@ class TorcedorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> cpfJaExiste(String cpf, {String? ignorarId}) async {
+    try {
+      return await _service.cpfJaExiste(cpf, ignorarId: ignorarId);
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<bool> criarTorcedor(Torcedor torcedor) async {
     try {
       await _service.createTorcedor(torcedor);
+      await _service.atualizarQtdSocios(torcedor.equipeId, 1);
       await carregarTorcedores();
       return true;
     } catch (e) {
@@ -73,7 +82,9 @@ class TorcedorController extends ChangeNotifier {
 
   Future<bool> excluirTorcedor(String id) async {
     try {
+      final torcedor = await _service.getTorcedorById(id);
       await _service.deleteTorcedor(id);
+      await _service.atualizarQtdSocios(torcedor.equipeId, -1);
       await carregarTorcedores();
       return true;
     } catch (e) {

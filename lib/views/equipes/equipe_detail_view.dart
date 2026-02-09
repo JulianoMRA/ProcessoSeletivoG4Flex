@@ -100,6 +100,9 @@ class EquipeDetailView extends StatelessWidget {
 
               if (context.mounted) {
                 if (sucesso) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Equipe excluída!')),
+                  );
                   Navigator.pop(context, true);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
