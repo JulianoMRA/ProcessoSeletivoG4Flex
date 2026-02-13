@@ -153,7 +153,6 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
       sucesso = await _controller.atualizarTorcedor(
         widget.torcedor!.id!,
         torcedor,
-        equipeIdAnterior: widget.torcedor!.equipeId,
       );
     } else {
       sucesso = await _controller.criarTorcedor(torcedor);
@@ -324,7 +323,9 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                             .map(
                               (p) => DropdownMenuItem(
                                 value: p,
-                                child: Text(p.nome),
+                                child: Text(
+                                  '${p.nome} - R\$ ${p.valor.toStringAsFixed(2)}',
+                                ),
                               ),
                             )
                             .toList(),

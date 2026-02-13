@@ -1,22 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fala_torcedor/core/constants.dart';
 import 'package:fala_torcedor/core/theme.dart';
 import 'package:fala_torcedor/views/home_view.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(
-    url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
-  );
-
   runApp(const FalaTorcedorApp());
 }
-
-final supabase = Supabase.instance.client;
 
 class FalaTorcedorApp extends StatelessWidget {
   const FalaTorcedorApp({super.key});

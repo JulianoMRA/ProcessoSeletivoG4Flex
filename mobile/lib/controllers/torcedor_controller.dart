@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
-import 'package:fala_torcedor/services/supabase_service.dart';
+import 'package:fala_torcedor/services/api_service.dart';
 
 class TorcedorController extends ChangeNotifier {
-  final _service = SupabaseService();
+  final _service = ApiService();
 
   List<Torcedor> torcedores = [];
   List<Equipe> equipes = [];
@@ -58,7 +58,6 @@ class TorcedorController extends ChangeNotifier {
   Future<bool> criarTorcedor(Torcedor torcedor) async {
     try {
       await _service.createTorcedor(torcedor);
-      await _service.atualizarQtdSocios(torcedor.equipeId, 1);
       await carregarTorcedores();
       return true;
     } catch (e) {
@@ -68,20 +67,9 @@ class TorcedorController extends ChangeNotifier {
     }
   }
 
-  Future<bool> atualizarTorcedor(
-    String id,
-    Torcedor torcedor, {
-    String? equipeIdAnterior,
-  }) async {
+  Future<bool> atualizarTorcedor(String id, Torcedor torcedor) async {
     try {
       await _service.updateTorcedor(id, torcedor);
-
-      if (equipeIdAnterior != null &&
-          equipeIdAnterior != torcedor.equipeId) {
-        await _service.atualizarQtdSocios(equipeIdAnterior, -1);
-        await _service.atualizarQtdSocios(torcedor.equipeId, 1);
-      }
-
       await carregarTorcedores();
       return true;
     } catch (e) {
@@ -93,9 +81,7 @@ class TorcedorController extends ChangeNotifier {
 
   Future<bool> excluirTorcedor(String id) async {
     try {
-      final torcedor = await _service.getTorcedorById(id);
       await _service.deleteTorcedor(id);
-      await _service.atualizarQtdSocios(torcedor.equipeId, -1);
       await carregarTorcedores();
       return true;
     } catch (e) {

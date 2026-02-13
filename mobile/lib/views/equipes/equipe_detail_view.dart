@@ -222,6 +222,14 @@ class EquipeDetailView extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
+                trailing: Text(
+                  'R\$ ${entry.value.valor.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
             ),
           ),

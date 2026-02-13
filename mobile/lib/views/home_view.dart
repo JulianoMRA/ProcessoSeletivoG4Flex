@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
+import 'package:fala_torcedor/views/planos/planos_list_view.dart';
 import 'package:fala_torcedor/views/torcedores/torcedores_list_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -116,7 +117,7 @@ class _HomeViewState extends State<HomeView>
         ),
         const SizedBox(height: 8),
         const Text(
-          'Gerencie equipes e torcedores',
+          'Gerencie equipes, planos e torcedores',
           style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       ],
@@ -145,6 +146,17 @@ class _HomeViewState extends State<HomeView>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const TorcedoresListView()),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _MenuCard(
+          icon: Icons.card_membership_rounded,
+          title: 'Planos',
+          subtitle: 'Gerenciar planos de sócio',
+          gradient: [AppColors.accent, AppColors.accentLight],
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PlanosListView()),
           ),
         ),
       ],

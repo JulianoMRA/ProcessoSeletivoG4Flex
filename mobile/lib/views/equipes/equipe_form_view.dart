@@ -21,6 +21,9 @@ class _EquipeFormViewState extends State<EquipeFormView> {
   late final TextEditingController _plano1Ctrl;
   late final TextEditingController _plano2Ctrl;
   late final TextEditingController _plano3Ctrl;
+  late final TextEditingController _valor1Ctrl;
+  late final TextEditingController _valor2Ctrl;
+  late final TextEditingController _valor3Ctrl;
 
   String _serieSelecionada = 'Série A';
   bool _salvando = false;
@@ -50,12 +53,30 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     _plano3Ctrl = TextEditingController(
       text: eq != null && eq.planos.length > 2 ? eq.planos[2].nome : '',
     );
+    _valor1Ctrl = TextEditingController(
+      text: eq != null && eq.planos.isNotEmpty
+          ? eq.planos[0].valor.toStringAsFixed(2)
+          : '',
+    );
+    _valor2Ctrl = TextEditingController(
+      text: eq != null && eq.planos.length > 1
+          ? eq.planos[1].valor.toStringAsFixed(2)
+          : '',
+    );
+    _valor3Ctrl = TextEditingController(
+      text: eq != null && eq.planos.length > 2
+          ? eq.planos[2].valor.toStringAsFixed(2)
+          : '',
+    );
 
     _nomeCtrl.addListener(_marcarModificado);
     _qtdSociosCtrl.addListener(_marcarModificado);
     _plano1Ctrl.addListener(_marcarModificado);
     _plano2Ctrl.addListener(_marcarModificado);
     _plano3Ctrl.addListener(_marcarModificado);
+    _valor1Ctrl.addListener(_marcarModificado);
+    _valor2Ctrl.addListener(_marcarModificado);
+    _valor3Ctrl.addListener(_marcarModificado);
   }
 
   void _marcarModificado() {
@@ -69,6 +90,9 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     _plano1Ctrl.dispose();
     _plano2Ctrl.dispose();
     _plano3Ctrl.dispose();
+    _valor1Ctrl.dispose();
+    _valor2Ctrl.dispose();
+    _valor3Ctrl.dispose();
     super.dispose();
   }
 
@@ -84,9 +108,18 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     );
 
     final planos = [
-      _plano1Ctrl.text.trim(),
-      _plano2Ctrl.text.trim(),
-      _plano3Ctrl.text.trim(),
+      {
+        'nome': _plano1Ctrl.text.trim(),
+        'valor': double.parse(_valor1Ctrl.text.trim()),
+      },
+      {
+        'nome': _plano2Ctrl.text.trim(),
+        'valor': double.parse(_valor2Ctrl.text.trim()),
+      },
+      {
+        'nome': _plano3Ctrl.text.trim(),
+        'valor': double.parse(_valor3Ctrl.text.trim()),
+      },
     ];
 
     bool sucesso;
@@ -227,11 +260,11 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                 const SizedBox(height: 28),
                 _buildSectionTitle('Planos de sócio'),
                 const SizedBox(height: 12),
-                _buildPlanoField(_plano1Ctrl, 'Plano 1'),
+                _buildPlanoRow(_plano1Ctrl, _valor1Ctrl, 'Plano 1'),
                 const SizedBox(height: 12),
-                _buildPlanoField(_plano2Ctrl, 'Plano 2'),
+                _buildPlanoRow(_plano2Ctrl, _valor2Ctrl, 'Plano 2'),
                 const SizedBox(height: 12),
-                _buildPlanoField(_plano3Ctrl, 'Plano 3'),
+                _buildPlanoRow(_plano3Ctrl, _valor3Ctrl, 'Plano 3'),
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: _salvando ? null : _salvar,
@@ -288,15 +321,48 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     );
   }
 
-  Widget _buildPlanoField(TextEditingController ctrl, String label) {
-    return TextFormField(
-      controller: ctrl,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: const Icon(Icons.card_membership_outlined),
-      ),
-      validator: (v) =>
-          v == null || v.trim().isEmpty ? 'Informe o nome do plano' : null,
+  Widget _buildPlanoRow(
+    TextEditingController nomeCtrl,
+    TextEditingController valorCtrl,
+    String label,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: TextFormField(
+            controller: nomeCtrl,
+            decoration: InputDecoration(
+              labelText: label,
+              prefixIcon: const Icon(Icons.card_membership_outlined),
+            ),
+            validator: (v) =>
+                v == null || v.trim().isEmpty ? 'Informe o nome' : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: TextFormField(
+            controller: valorCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Valor (R\$)',
+              prefixIcon: Icon(Icons.attach_money),
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) {
+                return 'Informe o valor';
+              }
+              if (double.tryParse(v.trim()) == null) {
+                return 'Valor inválido';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
     );
   }
 }

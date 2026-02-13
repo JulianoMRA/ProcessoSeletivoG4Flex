@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/models/equipe.dart';
-import 'package:fala_torcedor/services/supabase_service.dart';
+import 'package:fala_torcedor/services/api_service.dart';
 
 class EquipeController extends ChangeNotifier {
-  final _service = SupabaseService();
+  final _service = ApiService();
 
   List<Equipe> equipes = [];
   bool isLoading = false;
@@ -24,9 +24,12 @@ class EquipeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> criarEquipe(Equipe equipe, List<String> nomesPlanos) async {
+  Future<bool> criarEquipe(
+    Equipe equipe,
+    List<Map<String, dynamic>> planos,
+  ) async {
     try {
-      await _service.createEquipe(equipe, nomesPlanos);
+      await _service.createEquipe(equipe, planos);
       await carregarEquipes();
       return true;
     } catch (e) {
@@ -39,10 +42,10 @@ class EquipeController extends ChangeNotifier {
   Future<bool> atualizarEquipe(
     String id,
     Equipe equipe,
-    List<String> nomesPlanos,
+    List<Map<String, dynamic>> planos,
   ) async {
     try {
-      await _service.updateEquipe(id, equipe, nomesPlanos);
+      await _service.updateEquipe(id, equipe, planos);
       await carregarEquipes();
       return true;
     } catch (e) {

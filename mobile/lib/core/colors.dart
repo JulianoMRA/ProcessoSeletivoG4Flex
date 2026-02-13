@@ -13,6 +13,10 @@ class AppColors {
   static const secondaryLight = Color(0xFF5FFFD7);
   static const secondaryDark = Color(0xFF00A676);
 
+  // Accent (Planos)
+  static const accent = Color(0xFFFF6B35);
+  static const accentLight = Color(0xFFFFA07A);
+
   // Surfaces
   static const surface = Color(0xFFFAFBFC);
   static const surfaceVariant = Color(0xFFF0F2F5);
