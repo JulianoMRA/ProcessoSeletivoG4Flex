@@ -1,98 +1,108 @@
 -- 1. EQUIPES
-
 INSERT INTO equipes (nome, serie, qtd_socios)
 VALUES ('Flamengo', 'Série A', 3),
   ('Palmeiras', 'Série A', 2),
   ('Sport Recife', 'Série B', 2),
   ('Remo', 'Série C', 1),
   ('Aparecidense', 'Série D', 2);
-
--- 2. PLANOS (3 por equipe)
-
+-- 2. PLANOS (3 por equipe, com valor mensal)
 -- Flamengo
-INSERT INTO planos (equipe_id, nome)
+INSERT INTO planos (equipe_id, nome, valor)
 SELECT id,
-  'Raça'
+  'Raça',
+  29.90
 FROM equipes
 WHERE nome = 'Flamengo'
 UNION ALL
 SELECT id,
-  'Paixão'
+  'Paixão',
+  59.90
 FROM equipes
 WHERE nome = 'Flamengo'
 UNION ALL
 SELECT id,
-  'Nação'
+  'Nação',
+  99.90
 FROM equipes
 WHERE nome = 'Flamengo';
 -- Palmeiras
-INSERT INTO planos (equipe_id, nome)
+INSERT INTO planos (equipe_id, nome, valor)
 SELECT id,
-  'Avanti'
+  'Avanti',
+  35.00
 FROM equipes
 WHERE nome = 'Palmeiras'
 UNION ALL
 SELECT id,
-  'Avanti Família'
+  'Avanti Família',
+  69.90
 FROM equipes
 WHERE nome = 'Palmeiras'
 UNION ALL
 SELECT id,
-  'Avanti Premium'
+  'Avanti Premium',
+  109.90
 FROM equipes
 WHERE nome = 'Palmeiras';
 -- Sport Recife
-INSERT INTO planos (equipe_id, nome)
+INSERT INTO planos (equipe_id, nome, valor)
 SELECT id,
-  'Leão Bronze'
+  'Leão Bronze',
+  19.90
 FROM equipes
 WHERE nome = 'Sport Recife'
 UNION ALL
 SELECT id,
-  'Leão Prata'
+  'Leão Prata',
+  39.90
 FROM equipes
 WHERE nome = 'Sport Recife'
 UNION ALL
 SELECT id,
-  'Leão Ouro'
+  'Leão Ouro',
+  79.90
 FROM equipes
 WHERE nome = 'Sport Recife';
 -- Remo
-INSERT INTO planos (equipe_id, nome)
+INSERT INTO planos (equipe_id, nome, valor)
 SELECT id,
-  'Azulino'
+  'Azulino',
+  15.00
 FROM equipes
 WHERE nome = 'Remo'
 UNION ALL
 SELECT id,
-  'Azulão'
+  'Azulão',
+  35.00
 FROM equipes
 WHERE nome = 'Remo'
 UNION ALL
 SELECT id,
-  'Fenômeno Azul'
+  'Fenômeno Azul',
+  65.00
 FROM equipes
 WHERE nome = 'Remo';
 -- Aparecidense
-INSERT INTO planos (equipe_id, nome)
+INSERT INTO planos (equipe_id, nome, valor)
 SELECT id,
-  'Camaleão'
+  'Camaleão',
+  10.00
 FROM equipes
 WHERE nome = 'Aparecidense'
 UNION ALL
 SELECT id,
-  'Camaleão Plus'
+  'Camaleão Plus',
+  25.00
 FROM equipes
 WHERE nome = 'Aparecidense'
 UNION ALL
 SELECT id,
-  'Camaleão VIP'
+  'Camaleão VIP',
+  50.00
 FROM equipes
 WHERE nome = 'Aparecidense';
-
 -- 3. TORCEDORES
-
--- Torcedores do Flamengo
+-- Flamengo
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'João Silva',
   '12345678901',
@@ -126,7 +136,7 @@ FROM equipes e,
 WHERE e.nome = 'Flamengo'
   AND p.nome = 'Paixão'
   AND p.equipe_id = e.id;
--- Torcedores do Palmeiras
+-- Palmeiras
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Ana Costa',
   '45678901234',
@@ -149,7 +159,7 @@ FROM equipes e,
 WHERE e.nome = 'Palmeiras'
   AND p.nome = 'Avanti Premium'
   AND p.equipe_id = e.id;
--- Torcedores do Sport
+-- Sport Recife
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Carlos Almeida',
   '67890123456',
@@ -172,7 +182,7 @@ FROM equipes e,
 WHERE e.nome = 'Sport Recife'
   AND p.nome = 'Leão Bronze'
   AND p.equipe_id = e.id;
--- Torcedores do Remo
+-- Remo
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Roberto Souza',
   '89012345678',
@@ -184,7 +194,7 @@ FROM equipes e,
 WHERE e.nome = 'Remo'
   AND p.nome = 'Azulão'
   AND p.equipe_id = e.id;
--- Torcedores da Aparecidense
+-- Aparecidense
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Juliana Martins',
   '90123456789',
