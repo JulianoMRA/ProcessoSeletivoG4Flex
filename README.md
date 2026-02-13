@@ -1,4 +1,4 @@
-# Fala, Torcedor! ⚽
+# Fala, Torcedor!
 
 Sistema de gestão de sócios-torcedores para clubes de futebol.
 
@@ -7,64 +7,95 @@ Sistema de gestão de sócios-torcedores para clubes de futebol.
 ```
 ProcessoSeletivoG4Flex/
 ├── backend/              # API Node.js + Express + PostgreSQL
-├── mobile/               # App Flutter (Android/iOS)
+│   └── src/
+│       ├── config/       # Conexão com banco de dados
+│       ├── controllers/  # Lógica de negócio
+│       ├── routes/       # Rotas da API
+│       └── server.js     # Entrada da aplicação
+├── mobile/               # App Flutter (Android/iOS/Web)
+│   └── lib/
+│       ├── controllers/  # Lógica de estado (ChangeNotifier)
+│       ├── core/         # Cores, tema
+│       ├── models/       # Equipe, Plano, Torcedor
+│       ├── services/     # ApiService (HTTP)
+│       └── views/        # Telas (home, equipes, planos, torcedores)
 └── database/             # Scripts SQL (schema, seed, reset)
 ```
 
 ## Tecnologias
 
-### Backend
-- **Node.js** + Express
-- **PostgreSQL** (nativo)
-- API RESTful
-
-### Mobile
-- **Flutter** 3.x
-- Material Design 3
-- Arquitetura MVC
-
-### Database
-- **PostgreSQL** 14+
-- UUID como PK
-- Row Level Security (RLS)
+| Camada   | Stack                              |
+|----------|------------------------------------|
+| Backend  | Node.js, Express, PostgreSQL, `pg` |
+| Mobile   | Flutter 3.x, Material Design 3     |
+| Database | PostgreSQL 14+, UUID como PK       |
 
 ## Como Executar
 
-### Backend (em desenvolvimento)
+### 1. Database
 ```bash
-cd backend
-npm install
-npm run dev
+# Crie o banco de dados
+createdb fala_torcedor
+
+# Execute os scripts
+psql -d fala_torcedor -f database/schema.sql
+psql -d fala_torcedor -f database/seed.sql
 ```
 
-### Mobile
+### 2. Backend
+```bash
+cd backend
+cp .env.example .env      # edite DB_PASSWORD
+npm install
+npm run dev               # http://localhost:3000
+```
+
+### 3. Mobile
 ```bash
 cd mobile
 flutter pub get
-flutter run
+flutter run -d chrome     # ou flutter run (Android)
 ```
 
-### Database
-Execute os scripts na ordem:
-1. `database/schema.sql` - Cria tabelas
-2. `database/seed.sql` - Popula dados
-3. `database/reset.sql` - Limpa banco (quando necessário)
+## API Endpoints
 
-## Funcionalidades
+Base URL: `http://localhost:3000/api`
 
-- ✅ CRUD de Equipes (Série A, B, C, D)
-- ✅ CRUD de Torcedores (CPF, data nascimento)
-- ✅ CRUD de Planos (com valor mensal)
-- ✅ Filtros e ordenação avançados
-- ✅ Validação de CPF único
-- ✅ UI moderna e minimalista
+### Equipes
 
-## Entidades
+| Método   | Rota              | Descrição                |
+|----------|--------------------|--------------------------|
+| `GET`    | `/equipes`         | Listar todas             |
+| `GET`    | `/equipes/:id`     | Buscar por ID (+ planos) |
+| `POST`   | `/equipes`         | Criar (com planos)       |
+| `PUT`    | `/equipes/:id`     | Atualizar (com planos)   |
+| `DELETE` | `/equipes/:id`     | Excluir (cascade)        |
 
-- **Equipes**: Clubes de futebol com séries
-- **Planos**: 3 planos de sócio por equipe (com valor R$)
-- **Torcedores**: Sócios vinculados a equipe e plano
+### Planos
 
-## Fase Atual
+| Método   | Rota                          | Descrição                  |
+|----------|-------------------------------|----------------------------|
+| `GET`    | `/planos`                     | Listar todos               |
+| `GET`    | `/planos?equipe_id=<uuid>`    | Filtrar por equipe         |
+| `GET`    | `/planos/:id`                 | Buscar por ID              |
+| `POST`   | `/planos`                     | Criar                      |
+| `PUT`    | `/planos/:id`                 | Atualizar                  |
+| `DELETE` | `/planos/:id`                 | Excluir                    |
 
-**Fase 2**: Migração de Supabase para backend próprio ✨
+### Torcedores
+
+| Método   | Rota                                    | Descrição           |
+|----------|-----------------------------------------|----------------------|
+| `GET`    | `/torcedores`                           | Listar todos         |
+| `GET`    | `/torcedores/:id`                       | Buscar por ID        |
+| `GET`    | `/torcedores/verificar-cpf?cpf=<cpf>`   | Verificar CPF único  |
+| `POST`   | `/torcedores`                           | Criar                |
+| `PUT`    | `/torcedores/:id`                       | Atualizar            |
+| `DELETE` | `/torcedores/:id`                       | Excluir              |
+
+### Health Check
+
+| Método | Rota      | Descrição         |
+|--------|-----------|-------------------|
+| `GET`  | `/health` | Status da API     |
+
