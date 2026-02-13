@@ -2,16 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/models/equipe.dart';
+import 'package:fala_torcedor/services/api_service.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
 
-class EquipeDetailView extends StatelessWidget {
+class EquipeDetailView extends StatefulWidget {
   final Equipe equipe;
 
   const EquipeDetailView({super.key, required this.equipe});
 
   @override
+  State<EquipeDetailView> createState() => _EquipeDetailViewState();
+}
+
+class _EquipeDetailViewState extends State<EquipeDetailView> {
+  final _api = ApiService();
+  late Equipe _equipe;
+  bool _carregando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _equipe = widget.equipe;
+    _carregarDetalhes();
+  }
+
+  Future<void> _carregarDetalhes() async {
+    try {
+      final equipeCompleta = await _api.getEquipeById(_equipe.id!);
+      if (mounted) {
+        setState(() {
+          _equipe = equipeCompleta;
+          _carregando = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cor = AppColors.corSerie(equipe.serie);
+    final cor = AppColors.corSerie(_equipe.serie);
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +55,7 @@ class EquipeDetailView extends StatelessWidget {
               final editou = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EquipeFormView(equipe: equipe),
+                  builder: (_) => EquipeFormView(equipe: _equipe),
                 ),
               );
               if (editou == true && context.mounted) {
@@ -75,7 +106,7 @@ class EquipeDetailView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    equipe.nome,
+                    _equipe.nome,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -93,7 +124,7 @@ class EquipeDetailView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      equipe.serie,
+                      _equipe.serie,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -136,7 +167,7 @@ class EquipeDetailView extends StatelessWidget {
               ),
             ),
             Text(
-              equipe.qtdSocios.toString(),
+              _equipe.qtdSocios.toString(),
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
@@ -172,7 +203,14 @@ class EquipeDetailView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        if (equipe.planos.isEmpty)
+        if (_carregando)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (_equipe.planos.isEmpty)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -185,7 +223,7 @@ class EquipeDetailView extends StatelessWidget {
             ),
           )
         else
-          ...equipe.planos.asMap().entries.map(
+          ..._equipe.planos.asMap().entries.map(
             (entry) => Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
@@ -243,7 +281,7 @@ class EquipeDetailView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir equipe'),
         content: Text(
-          'Todos os torcedores e planos de "${equipe.nome}" serão excluídos. Deseja continuar?',
+          'Todos os torcedores e planos de "${_equipe.nome}" serão excluídos. Deseja continuar?',
         ),
         actions: [
           TextButton(
@@ -254,7 +292,7 @@ class EquipeDetailView extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(ctx);
               final controller = EquipeController();
-              final sucesso = await controller.excluirEquipe(equipe.id!);
+              final sucesso = await controller.excluirEquipe(_equipe.id!);
 
               if (context.mounted) {
                 if (sucesso) {
