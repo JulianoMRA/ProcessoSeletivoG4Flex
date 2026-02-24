@@ -17,6 +17,10 @@ class AppColors {
   static const accent = Color(0xFFFF6B35);
   static const accentLight = Color(0xFFFFA07A);
 
+  // Jogos
+  static const jogos = Color(0xFF8B5CF6);
+  static const jogosLight = Color(0xFFA78BFA);
+
   // Surfaces
   static const surface = Color(0xFFFAFBFC);
   static const surfaceVariant = Color(0xFFF0F2F5);

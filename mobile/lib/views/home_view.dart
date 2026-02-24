@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
+import 'package:fala_torcedor/views/jogos/jogos_list_view.dart';
 import 'package:fala_torcedor/views/planos/planos_list_view.dart';
 import 'package:fala_torcedor/views/torcedores/torcedores_list_view.dart';
 
@@ -117,7 +118,7 @@ class _HomeViewState extends State<HomeView>
         ),
         const SizedBox(height: 8),
         const Text(
-          'Gerencie equipes, planos e torcedores',
+          'Gerencie equipes, planos, torcedores e jogos',
           style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       ],
@@ -157,6 +158,17 @@ class _HomeViewState extends State<HomeView>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const PlanosListView()),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _MenuCard(
+          icon: Icons.sports_score_rounded,
+          title: 'Jogos',
+          subtitle: 'Registrar e consultar jogos',
+          gradient: [AppColors.jogos, AppColors.jogosLight],
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const JogosListView()),
           ),
         ),
       ],
