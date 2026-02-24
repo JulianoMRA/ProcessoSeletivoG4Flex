@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
+import 'package:fala_torcedor/models/jogo.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -210,5 +211,55 @@ class ApiService {
       return data['existe'] as bool;
     }
     return false;
+  }
+
+  // ======================= JOGOS =======================
+
+  Future<List<Jogo>> getJogos() async {
+    final response = await http.get(Uri.parse('$baseUrl/jogos'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((j) => Jogo.fromJson(j)).toList();
+    }
+    throw Exception('Erro ao carregar jogos');
+  }
+
+  Future<Jogo> getJogoById(String id) async {
+    final response = await http.get(Uri.parse('$baseUrl/jogos/$id'));
+    if (response.statusCode == 200) {
+      return Jogo.fromJson(json.decode(response.body));
+    }
+    throw Exception('Erro ao carregar jogo');
+  }
+
+  Future<Jogo> createJogo(Jogo jogo) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/jogos'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(jogo.toJson()),
+    );
+    if (response.statusCode == 201) {
+      return Jogo.fromJson(json.decode(response.body));
+    }
+    throw Exception('Erro ao criar jogo');
+  }
+
+  Future<Jogo> updateJogo(String id, Jogo jogo) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/jogos/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(jogo.toJson()),
+    );
+    if (response.statusCode == 200) {
+      return Jogo.fromJson(json.decode(response.body));
+    }
+    throw Exception('Erro ao atualizar jogo');
+  }
+
+  Future<void> deleteJogo(String id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/jogos/$id'));
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao excluir jogo');
+    }
   }
 }
