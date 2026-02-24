@@ -159,3 +159,99 @@ FROM equipes e,
   planos p
 WHERE e.nome = 'Aparecidense'
   AND p.nome = 'Ouro';
+-- 5. JOGOS
+-- Flamengo 2x1 Palmeiras
+INSERT INTO jogos (
+    data,
+    hora,
+    equipe_a_id,
+    equipe_b_id,
+    gols_equipe_a,
+    gols_equipe_b
+  )
+SELECT '2025-03-15',
+  '16:00',
+  a.id,
+  b.id,
+  2,
+  1
+FROM equipes a,
+  equipes b
+WHERE a.nome = 'Flamengo'
+  AND b.nome = 'Palmeiras';
+-- Sport Recife 0x0 Remo (empate)
+INSERT INTO jogos (
+    data,
+    hora,
+    equipe_a_id,
+    equipe_b_id,
+    gols_equipe_a,
+    gols_equipe_b
+  )
+SELECT '2025-04-10',
+  '19:00',
+  a.id,
+  b.id,
+  0,
+  0
+FROM equipes a,
+  equipes b
+WHERE a.nome = 'Sport Recife'
+  AND b.nome = 'Remo';
+-- Palmeiras 3x1 Aparecidense
+INSERT INTO jogos (
+    data,
+    hora,
+    equipe_a_id,
+    equipe_b_id,
+    gols_equipe_a,
+    gols_equipe_b
+  )
+SELECT '2025-05-22',
+  '20:30',
+  a.id,
+  b.id,
+  3,
+  1
+FROM equipes a,
+  equipes b
+WHERE a.nome = 'Palmeiras'
+  AND b.nome = 'Aparecidense';
+-- Flamengo 1x2 Sport Recife
+INSERT INTO jogos (
+    data,
+    hora,
+    equipe_a_id,
+    equipe_b_id,
+    gols_equipe_a,
+    gols_equipe_b
+  )
+SELECT '2025-06-08',
+  '21:00',
+  a.id,
+  b.id,
+  1,
+  2
+FROM equipes a,
+  equipes b
+WHERE a.nome = 'Flamengo'
+  AND b.nome = 'Sport Recife';
+-- Remo 4x0 Aparecidense
+INSERT INTO jogos (
+    data,
+    hora,
+    equipe_a_id,
+    equipe_b_id,
+    gols_equipe_a,
+    gols_equipe_b
+  )
+SELECT '2025-07-01',
+  '15:30',
+  a.id,
+  b.id,
+  4,
+  0
+FROM equipes a,
+  equipes b
+WHERE a.nome = 'Remo'
+  AND b.nome = 'Aparecidense';

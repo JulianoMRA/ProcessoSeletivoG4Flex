@@ -28,3 +28,14 @@ CREATE TABLE torcedores (
   equipe_id UUID NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
   plano_id UUID NOT NULL REFERENCES planos(id) ON DELETE CASCADE
 );
+-- Jogos
+CREATE TABLE jogos (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  data DATE NOT NULL,
+  hora TIME NOT NULL,
+  equipe_a_id UUID NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
+  equipe_b_id UUID NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
+  gols_equipe_a INTEGER NOT NULL DEFAULT 0,
+  gols_equipe_b INTEGER NOT NULL DEFAULT 0,
+  CHECK (equipe_a_id != equipe_b_id)
+);
