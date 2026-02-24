@@ -24,12 +24,9 @@ class EquipeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> criarEquipe(
-    Equipe equipe,
-    List<Map<String, dynamic>> planos,
-  ) async {
+  Future<bool> criarEquipe(Equipe equipe, List<String> planoIds) async {
     try {
-      await _service.createEquipe(equipe, planos);
+      await _service.createEquipe(equipe, planoIds);
       await carregarEquipes();
       return true;
     } catch (e) {
@@ -42,10 +39,10 @@ class EquipeController extends ChangeNotifier {
   Future<bool> atualizarEquipe(
     String id,
     Equipe equipe,
-    List<Map<String, dynamic>> planos,
+    List<String> planoIds,
   ) async {
     try {
-      await _service.updateEquipe(id, equipe, planos);
+      await _service.updateEquipe(id, equipe, planoIds);
       await carregarEquipes();
       return true;
     } catch (e) {

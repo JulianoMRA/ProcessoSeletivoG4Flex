@@ -4,21 +4,18 @@ exports.listar = async (req, res) => {
     try {
         const { equipe_id } = req.query;
 
-        let query = `
-      SELECT p.*, e.nome AS equipe_nome, e.serie AS equipe_serie
-      FROM planos p
-      JOIN equipes e ON p.equipe_id = e.id
-    `;
-        const params = [];
-
         if (equipe_id) {
-            query += ' WHERE p.equipe_id = $1';
-            params.push(equipe_id);
+            const result = await pool.query(
+                `SELECT p.* FROM planos p
+                 JOIN equipe_planos ep ON p.id = ep.plano_id
+                 WHERE ep.equipe_id = $1
+                 ORDER BY p.valor`,
+                [equipe_id]
+            );
+            return res.json(result.rows);
         }
 
-        query += ' ORDER BY e.nome, p.valor';
-
-        const result = await pool.query(query, params);
+        const result = await pool.query('SELECT * FROM planos ORDER BY nome, valor');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ erro: 'Erro ao listar planos' });
@@ -29,18 +26,22 @@ exports.buscarPorId = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await pool.query(`
-      SELECT p.*, e.nome AS equipe_nome, e.serie AS equipe_serie
-      FROM planos p
-      JOIN equipes e ON p.equipe_id = e.id
-      WHERE p.id = $1
-    `, [id]);
+        const result = await pool.query(
+            'SELECT * FROM planos WHERE id = $1', [id]
+        );
 
         if (result.rows.length === 0) {
             return res.status(404).json({ erro: 'Plano não encontrado' });
         }
 
-        res.json(result.rows[0]);
+        const equipes = await pool.query(
+            `SELECT e.id, e.nome, e.serie FROM equipes e
+             JOIN equipe_planos ep ON e.id = ep.equipe_id
+             WHERE ep.plano_id = $1
+             ORDER BY e.nome`, [id]
+        );
+
+        res.json({ ...result.rows[0], equipes: equipes.rows });
     } catch (err) {
         res.status(500).json({ erro: 'Erro ao buscar plano' });
     }
@@ -48,11 +49,11 @@ exports.buscarPorId = async (req, res) => {
 
 exports.criar = async (req, res) => {
     try {
-        const { equipe_id, nome, valor } = req.body;
+        const { nome, valor } = req.body;
 
         const result = await pool.query(
-            'INSERT INTO planos (equipe_id, nome, valor) VALUES ($1, $2, $3) RETURNING *',
-            [equipe_id, nome, valor]
+            'INSERT INTO planos (nome, valor) VALUES ($1, $2) RETURNING *',
+            [nome, valor]
         );
 
         res.status(201).json(result.rows[0]);

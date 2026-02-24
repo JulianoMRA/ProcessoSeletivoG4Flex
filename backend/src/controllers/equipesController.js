@@ -24,7 +24,10 @@ exports.buscarPorId = async (req, res) => {
         }
 
         const planos = await pool.query(
-            'SELECT * FROM planos WHERE equipe_id = $1 ORDER BY valor', [id]
+            `SELECT p.* FROM planos p
+             JOIN equipe_planos ep ON p.id = ep.plano_id
+             WHERE ep.equipe_id = $1
+             ORDER BY p.valor`, [id]
         );
 
         res.json({ ...equipe.rows[0], planos: planos.rows });
@@ -35,7 +38,7 @@ exports.buscarPorId = async (req, res) => {
 
 exports.criar = async (req, res) => {
     try {
-        const { nome, serie, planos } = req.body;
+        const { nome, serie, plano_ids } = req.body;
 
         const equipe = await pool.query(
             'INSERT INTO equipes (nome, serie) VALUES ($1, $2) RETURNING *',
@@ -44,23 +47,23 @@ exports.criar = async (req, res) => {
 
         const equipeId = equipe.rows[0].id;
 
-        if (planos && planos.length > 0) {
-            for (const plano of planos) {
+        if (plano_ids && plano_ids.length > 0) {
+            for (const planoId of plano_ids) {
                 await pool.query(
-                    'INSERT INTO planos (equipe_id, nome, valor) VALUES ($1, $2, $3)',
-                    [equipeId, plano.nome, plano.valor]
+                    'INSERT INTO equipe_planos (equipe_id, plano_id) VALUES ($1, $2)',
+                    [equipeId, planoId]
                 );
             }
         }
 
-        const resultado = await pool.query(
-            'SELECT * FROM equipes WHERE id = $1', [equipeId]
-        );
-        const planosResult = await pool.query(
-            'SELECT * FROM planos WHERE equipe_id = $1 ORDER BY valor', [equipeId]
+        const planos = await pool.query(
+            `SELECT p.* FROM planos p
+             JOIN equipe_planos ep ON p.id = ep.plano_id
+             WHERE ep.equipe_id = $1
+             ORDER BY p.valor`, [equipeId]
         );
 
-        res.status(201).json({ ...resultado.rows[0], planos: planosResult.rows });
+        res.status(201).json({ ...equipe.rows[0], planos: planos.rows });
     } catch (err) {
         res.status(500).json({ erro: 'Erro ao criar equipe' });
     }
@@ -69,20 +72,20 @@ exports.criar = async (req, res) => {
 exports.atualizar = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nome, serie, planos } = req.body;
+        const { nome, serie, plano_ids } = req.body;
 
         await pool.query(
             'UPDATE equipes SET nome = $1, serie = $2 WHERE id = $3',
             [nome, serie, id]
         );
 
-        if (planos) {
-            await pool.query('DELETE FROM planos WHERE equipe_id = $1', [id]);
+        if (plano_ids) {
+            await pool.query('DELETE FROM equipe_planos WHERE equipe_id = $1', [id]);
 
-            for (const plano of planos) {
+            for (const planoId of plano_ids) {
                 await pool.query(
-                    'INSERT INTO planos (equipe_id, nome, valor) VALUES ($1, $2, $3)',
-                    [id, plano.nome, plano.valor]
+                    'INSERT INTO equipe_planos (equipe_id, plano_id) VALUES ($1, $2)',
+                    [id, planoId]
                 );
             }
         }
@@ -90,11 +93,14 @@ exports.atualizar = async (req, res) => {
         const resultado = await pool.query(
             'SELECT * FROM equipes WHERE id = $1', [id]
         );
-        const planosResult = await pool.query(
-            'SELECT * FROM planos WHERE equipe_id = $1 ORDER BY valor', [id]
+        const planos = await pool.query(
+            `SELECT p.* FROM planos p
+             JOIN equipe_planos ep ON p.id = ep.plano_id
+             WHERE ep.equipe_id = $1
+             ORDER BY p.valor`, [id]
         );
 
-        res.json({ ...resultado.rows[0], planos: planosResult.rows });
+        res.json({ ...resultado.rows[0], planos: planos.rows });
     } catch (err) {
         res.status(500).json({ erro: 'Erro ao atualizar equipe' });
     }

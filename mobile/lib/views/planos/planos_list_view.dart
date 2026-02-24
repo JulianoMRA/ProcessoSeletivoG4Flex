@@ -6,7 +6,7 @@ import 'package:fala_torcedor/views/planos/plano_detail_view.dart';
 import 'package:fala_torcedor/views/planos/plano_form_view.dart';
 import 'package:intl/intl.dart';
 
-enum OrdenacaoPlano { nome, valor, equipe }
+enum OrdenacaoPlano { nome, valor }
 
 class PlanosListView extends StatefulWidget {
   const PlanosListView({super.key});
@@ -18,8 +18,8 @@ class PlanosListView extends StatefulWidget {
 class _PlanosListViewState extends State<PlanosListView> {
   final _controller = PlanoController();
   final _buscaCtrl = TextEditingController();
+  final _formatador = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-  String? _filtroEquipe;
   OrdenacaoPlano _ordenacao = OrdenacaoPlano.nome;
   bool _ordemCrescente = true;
 
@@ -46,24 +46,11 @@ class _PlanosListViewState extends State<PlanosListView> {
   List<Plano> get _planosFiltrados {
     var lista = _controller.planos.toList();
 
-    // Filtro por equipe
-    if (_filtroEquipe != null) {
-      lista = lista.where((p) => p.equipeNome == _filtroEquipe).toList();
-    }
-
-    // Filtro por busca
     final busca = _buscaCtrl.text.toLowerCase();
     if (busca.isNotEmpty) {
-      lista = lista
-          .where(
-            (p) =>
-                p.nome.toLowerCase().contains(busca) ||
-                (p.equipeNome?.toLowerCase().contains(busca) ?? false),
-          )
-          .toList();
+      lista = lista.where((p) => p.nome.toLowerCase().contains(busca)).toList();
     }
 
-    // Ordenação
     lista.sort((a, b) {
       int resultado;
       switch (_ordenacao) {
@@ -71,8 +58,6 @@ class _PlanosListViewState extends State<PlanosListView> {
           resultado = a.nome.compareTo(b.nome);
         case OrdenacaoPlano.valor:
           resultado = a.valor.compareTo(b.valor);
-        case OrdenacaoPlano.equipe:
-          resultado = (a.equipeNome ?? '').compareTo(b.equipeNome ?? '');
       }
       return _ordemCrescente ? resultado : -resultado;
     });
@@ -80,24 +65,8 @@ class _PlanosListViewState extends State<PlanosListView> {
     return lista;
   }
 
-  List<String> get _equipes {
-    final nomes = _controller.planos
-        .where((p) => p.equipeNome != null)
-        .map((p) => p.equipeNome!)
-        .toSet()
-        .toList();
-    nomes.sort();
-    return nomes;
-  }
-
-  String _formatarValor(double valor) {
-    return NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(valor);
-  }
-
   bool get _temFiltrosAtivos =>
-      _filtroEquipe != null ||
-      _ordenacao != OrdenacaoPlano.nome ||
-      !_ordemCrescente;
+      _ordenacao != OrdenacaoPlano.nome || !_ordemCrescente;
 
   void _mostrarOpcoesFiltro() {
     showModalBottomSheet(
@@ -117,7 +86,7 @@ class _PlanosListViewState extends State<PlanosListView> {
                   const Icon(Icons.tune_rounded, color: AppColors.primary),
                   const SizedBox(width: 10),
                   const Text(
-                    'Filtros e ordenação',
+                    'Ordenação',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -128,7 +97,6 @@ class _PlanosListViewState extends State<PlanosListView> {
                   TextButton(
                     onPressed: () {
                       setModalState(() {
-                        _filtroEquipe = null;
                         _ordenacao = OrdenacaoPlano.nome;
                         _ordemCrescente = true;
                       });
@@ -139,44 +107,6 @@ class _PlanosListViewState extends State<PlanosListView> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Filtro por equipe
-              const Text(
-                'Filtrar por equipe',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildFilterChip(
-                    label: 'Todas',
-                    selected: _filtroEquipe == null,
-                    onTap: () {
-                      setModalState(() => _filtroEquipe = null);
-                      setState(() {});
-                    },
-                  ),
-                  ..._equipes.map(
-                    (equipe) => _buildFilterChip(
-                      label: equipe,
-                      selected: _filtroEquipe == equipe,
-                      onTap: () {
-                        setModalState(() => _filtroEquipe = equipe);
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Ordenação
               const Text(
                 'Ordenar por',
                 style: TextStyle(
@@ -208,20 +138,9 @@ class _PlanosListViewState extends State<PlanosListView> {
                       setState(() {});
                     },
                   ),
-                  _buildSortChip(
-                    label: 'Equipe',
-                    icon: Icons.shield_rounded,
-                    selected: _ordenacao == OrdenacaoPlano.equipe,
-                    onTap: () {
-                      setModalState(() => _ordenacao = OrdenacaoPlano.equipe);
-                      setState(() {});
-                    },
-                  ),
                 ],
               ),
               const SizedBox(height: 16),
-
-              // Direção
               Row(
                 children: [
                   const Text(
@@ -256,31 +175,6 @@ class _PlanosListViewState extends State<PlanosListView> {
               ),
               const SizedBox(height: 20),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accent : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -324,19 +218,6 @@ class _PlanosListViewState extends State<PlanosListView> {
     );
   }
 
-  String _descricaoFiltros() {
-    final partes = <String>[];
-    if (_filtroEquipe != null) partes.add(_filtroEquipe!);
-    final ordenacaoTexto = switch (_ordenacao) {
-      OrdenacaoPlano.nome => 'Nome',
-      OrdenacaoPlano.valor => 'Valor',
-      OrdenacaoPlano.equipe => 'Equipe',
-    };
-    final direcao = _ordemCrescente ? '↑' : '↓';
-    partes.add('$ordenacaoTexto $direcao');
-    return partes.join(' • ');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -347,7 +228,7 @@ class _PlanosListViewState extends State<PlanosListView> {
             isLabelVisible: _temFiltrosAtivos,
             child: IconButton(
               icon: const Icon(Icons.tune_rounded),
-              tooltip: 'Filtros e ordenação',
+              tooltip: 'Ordenação',
               onPressed: _mostrarOpcoesFiltro,
             ),
           ),
@@ -370,7 +251,7 @@ class _PlanosListViewState extends State<PlanosListView> {
             child: TextField(
               controller: _buscaCtrl,
               decoration: InputDecoration(
-                hintText: 'Buscar por nome ou equipe...',
+                hintText: 'Buscar por nome...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _buscaCtrl.text.isNotEmpty
                     ? IconButton(
@@ -381,49 +262,8 @@ class _PlanosListViewState extends State<PlanosListView> {
               ),
             ),
           ),
-          if (_temFiltrosAtivos) _buildActiveFilters(),
           const SizedBox(height: 8),
           Expanded(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveFilters() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.filter_list_rounded,
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              _descricaoFiltros(),
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () => setState(() {
-              _filtroEquipe = null;
-              _ordenacao = OrdenacaoPlano.nome;
-              _ordemCrescente = true;
-            }),
-            child: const Text(
-              'Limpar',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -512,7 +352,7 @@ class _PlanosListViewState extends State<PlanosListView> {
         itemCount: planos.length,
         itemBuilder: (context, index) => _PlanoCard(
           plano: planos[index],
-          formatarValor: _formatarValor,
+          formatarValor: _formatador.format,
           onTap: () async {
             final alterou = await Navigator.push<bool>(
               context,
@@ -530,7 +370,7 @@ class _PlanosListViewState extends State<PlanosListView> {
 
 class _PlanoCard extends StatelessWidget {
   final Plano plano;
-  final String Function(double) formatarValor;
+  final String Function(num) formatarValor;
   final VoidCallback onTap;
 
   const _PlanoCard({
@@ -581,41 +421,23 @@ class _PlanoCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              formatarValor(plano.valor),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.accent,
-                              ),
-                            ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          formatarValor(plano.valor),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accent,
                           ),
-                          const SizedBox(width: 12),
-                          const Icon(
-                            Icons.shield_outlined,
-                            size: 14,
-                            color: AppColors.textHint,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            plano.equipeNome ?? '',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),

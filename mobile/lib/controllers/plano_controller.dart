@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/models/plano.dart';
-import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 
 class PlanoController extends ChangeNotifier {
   final _service = ApiService();
 
   List<Plano> planos = [];
-  List<Equipe> equipes = [];
   bool isLoading = false;
   String? erro;
 
@@ -23,15 +21,6 @@ class PlanoController extends ChangeNotifier {
     }
 
     isLoading = false;
-    notifyListeners();
-  }
-
-  Future<void> carregarEquipes() async {
-    try {
-      equipes = await _service.getEquipes();
-    } catch (e) {
-      erro = 'Erro ao carregar equipes: $e';
-    }
     notifyListeners();
   }
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/models/equipe.dart';
+import 'package:fala_torcedor/models/plano.dart';
+import 'package:fala_torcedor/services/api_service.dart';
+import 'package:intl/intl.dart';
 
 class EquipeFormView extends StatefulWidget {
   final Equipe? equipe;
@@ -15,19 +18,17 @@ class EquipeFormView extends StatefulWidget {
 class _EquipeFormViewState extends State<EquipeFormView> {
   final _formKey = GlobalKey<FormState>();
   final _controller = EquipeController();
+  final _api = ApiService();
+  final _formatador = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   late final TextEditingController _nomeCtrl;
-  late final TextEditingController _qtdSociosCtrl;
-  late final TextEditingController _plano1Ctrl;
-  late final TextEditingController _plano2Ctrl;
-  late final TextEditingController _plano3Ctrl;
-  late final TextEditingController _valor1Ctrl;
-  late final TextEditingController _valor2Ctrl;
-  late final TextEditingController _valor3Ctrl;
-
   String _serieSelecionada = 'Série A';
   bool _salvando = false;
+  bool _carregando = true;
   bool _modificado = false;
+
+  List<Plano> _todosPlanos = [];
+  final Set<String> _planosSelecionados = {};
 
   bool get _editando => widget.equipe != null;
 
@@ -39,44 +40,27 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     final eq = widget.equipe;
 
     _nomeCtrl = TextEditingController(text: eq?.nome ?? '');
-    _qtdSociosCtrl = TextEditingController(
-      text: eq != null ? eq.qtdSocios.toString() : '',
-    );
     _serieSelecionada = eq?.serie ?? 'Série A';
 
-    _plano1Ctrl = TextEditingController(
-      text: eq != null && eq.planos.isNotEmpty ? eq.planos[0].nome : '',
-    );
-    _plano2Ctrl = TextEditingController(
-      text: eq != null && eq.planos.length > 1 ? eq.planos[1].nome : '',
-    );
-    _plano3Ctrl = TextEditingController(
-      text: eq != null && eq.planos.length > 2 ? eq.planos[2].nome : '',
-    );
-    _valor1Ctrl = TextEditingController(
-      text: eq != null && eq.planos.isNotEmpty
-          ? eq.planos[0].valor.toStringAsFixed(2)
-          : '',
-    );
-    _valor2Ctrl = TextEditingController(
-      text: eq != null && eq.planos.length > 1
-          ? eq.planos[1].valor.toStringAsFixed(2)
-          : '',
-    );
-    _valor3Ctrl = TextEditingController(
-      text: eq != null && eq.planos.length > 2
-          ? eq.planos[2].valor.toStringAsFixed(2)
-          : '',
-    );
-
     _nomeCtrl.addListener(_marcarModificado);
-    _qtdSociosCtrl.addListener(_marcarModificado);
-    _plano1Ctrl.addListener(_marcarModificado);
-    _plano2Ctrl.addListener(_marcarModificado);
-    _plano3Ctrl.addListener(_marcarModificado);
-    _valor1Ctrl.addListener(_marcarModificado);
-    _valor2Ctrl.addListener(_marcarModificado);
-    _valor3Ctrl.addListener(_marcarModificado);
+    _carregarDados();
+  }
+
+  Future<void> _carregarDados() async {
+    try {
+      _todosPlanos = await _api.getPlanos();
+
+      if (_editando) {
+        final equipeCompleta = await _api.getEquipeById(widget.equipe!.id!);
+        for (final plano in equipeCompleta.planos) {
+          _planosSelecionados.add(plano.id!);
+        }
+      }
+    } catch (e) {
+      // silently handle
+    }
+
+    if (mounted) setState(() => _carregando = false);
   }
 
   void _marcarModificado() {
@@ -86,51 +70,39 @@ class _EquipeFormViewState extends State<EquipeFormView> {
   @override
   void dispose() {
     _nomeCtrl.dispose();
-    _qtdSociosCtrl.dispose();
-    _plano1Ctrl.dispose();
-    _plano2Ctrl.dispose();
-    _plano3Ctrl.dispose();
-    _valor1Ctrl.dispose();
-    _valor2Ctrl.dispose();
-    _valor3Ctrl.dispose();
     super.dispose();
   }
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_planosSelecionados.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione pelo menos um plano')),
+      );
+      return;
+    }
+
     setState(() => _salvando = true);
 
     final equipe = Equipe(
       nome: _nomeCtrl.text.trim(),
       serie: _serieSelecionada,
-      qtdSocios: int.parse(_qtdSociosCtrl.text.trim()),
+      qtdSocios: widget.equipe?.qtdSocios ?? 0,
     );
-
-    final planos = [
-      {
-        'nome': _plano1Ctrl.text.trim(),
-        'valor': double.parse(_valor1Ctrl.text.trim()),
-      },
-      {
-        'nome': _plano2Ctrl.text.trim(),
-        'valor': double.parse(_valor2Ctrl.text.trim()),
-      },
-      {
-        'nome': _plano3Ctrl.text.trim(),
-        'valor': double.parse(_valor3Ctrl.text.trim()),
-      },
-    ];
 
     bool sucesso;
     if (_editando) {
       sucesso = await _controller.atualizarEquipe(
         widget.equipe!.id!,
         equipe,
-        planos,
+        _planosSelecionados.toList(),
       );
     } else {
-      sucesso = await _controller.criarEquipe(equipe, planos);
+      sucesso = await _controller.criarEquipe(
+        equipe,
+        _planosSelecionados.toList(),
+      );
     }
 
     setState(() => _salvando = false);
@@ -147,6 +119,82 @@ class _EquipeFormViewState extends State<EquipeFormView> {
         SnackBar(content: Text(_controller.erro ?? 'Erro desconhecido')),
       );
     }
+  }
+
+  Future<void> _criarPlanoInline() async {
+    final nomeCtrl = TextEditingController();
+    final valorCtrl = TextEditingController();
+
+    final criou = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Novo plano'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nomeCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Nome do plano',
+                prefixIcon: Icon(Icons.card_membership_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: valorCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Valor mensal (R\$)',
+                prefixIcon: Icon(Icons.attach_money),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (nomeCtrl.text.trim().isEmpty ||
+                  valorCtrl.text.trim().isEmpty ||
+                  double.tryParse(valorCtrl.text.trim()) == null) {
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Criar'),
+          ),
+        ],
+      ),
+    );
+
+    if (criou == true) {
+      final plano = Plano(
+        nome: nomeCtrl.text.trim(),
+        valor: double.parse(valorCtrl.text.trim()),
+      );
+      try {
+        final novo = await _api.createPlano(plano);
+        setState(() {
+          _todosPlanos.add(novo);
+          _planosSelecionados.add(novo.id!);
+          _modificado = true;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Erro ao criar plano')));
+        }
+      }
+    }
+
+    nomeCtrl.dispose();
+    valorCtrl.dispose();
   }
 
   Future<bool> _confirmarSaida() async {
@@ -188,112 +236,154 @@ class _EquipeFormViewState extends State<EquipeFormView> {
         appBar: AppBar(
           title: Text(_editando ? 'Editar Equipe' : 'Nova Equipe'),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildSectionTitle('Informações'),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nomeCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome da equipe',
-                    prefixIcon: Icon(Icons.shield_outlined),
-                  ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Informe o nome' : null,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _serieSelecionada,
-                  decoration: const InputDecoration(
-                    labelText: 'Série',
-                    prefixIcon: Icon(Icons.emoji_events_outlined),
-                  ),
-                  items: _series
-                      .map(
-                        (s) => DropdownMenuItem(
-                          value: s,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 12,
-                                height: 12,
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.corSerie(s),
-                                  borderRadius: BorderRadius.circular(3),
+        body: _carregando
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildSectionTitle('Informações'),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _nomeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Nome da equipe',
+                          prefixIcon: Icon(Icons.shield_outlined),
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Informe o nome'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _serieSelecionada,
+                        decoration: const InputDecoration(
+                          labelText: 'Série',
+                          prefixIcon: Icon(Icons.emoji_events_outlined),
+                        ),
+                        items: _series
+                            .map(
+                              (s) => DropdownMenuItem(
+                                value: s,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      margin: const EdgeInsets.only(right: 10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.corSerie(s),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    Text(s),
+                                  ],
                                 ),
                               ),
-                              Text(s),
-                            ],
-                          ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() {
+                          _serieSelecionada = v!;
+                          _modificado = true;
+                        }),
+                      ),
+                      const SizedBox(height: 28),
+                      _buildSectionTitle('Planos de sócio'),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Selecione os planos disponíveis para esta equipe',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textHint,
                         ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() {
-                    _serieSelecionada = v!;
-                    _modificado = true;
-                  }),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _qtdSociosCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Quantidade de sócios',
-                    prefixIcon: Icon(Icons.people_outline),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Informe a quantidade';
-                    }
-                    if (int.tryParse(v.trim()) == null) {
-                      return 'Número inválido';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 28),
-                _buildSectionTitle('Planos de sócio'),
-                const SizedBox(height: 12),
-                _buildPlanoRow(_plano1Ctrl, _valor1Ctrl, 'Plano 1'),
-                const SizedBox(height: 12),
-                _buildPlanoRow(_plano2Ctrl, _valor2Ctrl, 'Plano 2'),
-                const SizedBox(height: 12),
-                _buildPlanoRow(_plano3Ctrl, _valor3Ctrl, 'Plano 3'),
-                const SizedBox(height: 32),
-                FilledButton(
-                  onPressed: _salvando ? null : _salvar,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                  ),
-                  child: _salvando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _editando ? 'Salvar alterações' : 'Criar equipe',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildPlanosSelection(),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _criarPlanoInline,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Criar novo plano'),
+                      ),
+                      const SizedBox(height: 32),
+                      FilledButton(
+                        onPressed: _salvando ? null : _salvar,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                         ),
+                        child: _salvando
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                _editando
+                                    ? 'Salvar alterações'
+                                    : 'Criar equipe',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildPlanosSelection() {
+    if (_todosPlanos.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Text(
+              'Nenhum plano cadastrado. Crie um abaixo.',
+              style: TextStyle(color: AppColors.textHint),
             ),
           ),
         ),
-      ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _todosPlanos.map((plano) {
+        final selecionado = _planosSelecionados.contains(plano.id);
+        return FilterChip(
+          label: Text('${plano.nome} — ${_formatador.format(plano.valor)}'),
+          selected: selecionado,
+          showCheckmark: true,
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          checkmarkColor: AppColors.primary,
+          labelStyle: TextStyle(
+            fontWeight: selecionado ? FontWeight.w600 : FontWeight.w400,
+            color: selecionado ? AppColors.primary : AppColors.textSecondary,
+          ),
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _planosSelecionados.add(plano.id!);
+              } else {
+                _planosSelecionados.remove(plano.id!);
+              }
+              _modificado = true;
+            });
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -315,51 +405,6 @@ class _EquipeFormViewState extends State<EquipeFormView> {
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlanoRow(
-    TextEditingController nomeCtrl,
-    TextEditingController valorCtrl,
-    String label,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextFormField(
-            controller: nomeCtrl,
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: const Icon(Icons.card_membership_outlined),
-            ),
-            validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Informe o nome' : null,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: valorCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Valor (R\$)',
-              prefixIcon: Icon(Icons.attach_money),
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) {
-                return 'Informe o valor';
-              }
-              if (double.tryParse(v.trim()) == null) {
-                return 'Valor inválido';
-              }
-              return null;
-            },
           ),
         ),
       ],

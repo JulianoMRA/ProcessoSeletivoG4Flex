@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/models/plano.dart';
-import 'package:fala_torcedor/models/equipe.dart';
 
 class PlanoFormView extends StatefulWidget {
   final Plano? plano;
@@ -19,10 +18,7 @@ class _PlanoFormViewState extends State<PlanoFormView> {
 
   late final TextEditingController _nomeCtrl;
   late final TextEditingController _valorCtrl;
-
-  Equipe? _equipeSelecionada;
   bool _salvando = false;
-  bool _carregando = true;
   bool _modificado = false;
 
   bool get _editando => widget.plano != null;
@@ -30,45 +26,26 @@ class _PlanoFormViewState extends State<PlanoFormView> {
   @override
   void initState() {
     super.initState();
-    _nomeCtrl = TextEditingController(text: widget.plano?.nome ?? '');
+    final p = widget.plano;
+
+    _nomeCtrl = TextEditingController(text: p?.nome ?? '');
     _valorCtrl = TextEditingController(
-      text: widget.plano != null ? widget.plano!.valor.toStringAsFixed(2) : '',
+      text: p != null ? p.valor.toStringAsFixed(2) : '',
     );
 
     _nomeCtrl.addListener(_marcarModificado);
     _valorCtrl.addListener(_marcarModificado);
-
-    _controller.addListener(_onUpdate);
-    _carregarDados();
   }
 
   void _marcarModificado() {
     if (!_modificado) setState(() => _modificado = true);
   }
 
-  Future<void> _carregarDados() async {
-    await _controller.carregarEquipes();
-
-    if (_editando && widget.plano!.equipeId != null) {
-      _equipeSelecionada = _controller.equipes
-          .where((e) => e.id == widget.plano!.equipeId)
-          .firstOrNull;
-    }
-
-    setState(() => _carregando = false);
-  }
-
   @override
   void dispose() {
     _nomeCtrl.dispose();
     _valorCtrl.dispose();
-    _controller.removeListener(_onUpdate);
-    _controller.dispose();
     super.dispose();
-  }
-
-  void _onUpdate() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _salvar() async {
@@ -77,7 +54,6 @@ class _PlanoFormViewState extends State<PlanoFormView> {
     setState(() => _salvando = true);
 
     final plano = Plano(
-      equipeId: _equipeSelecionada!.id!,
       nome: _nomeCtrl.text.trim(),
       valor: double.parse(_valorCtrl.text.trim()),
     );
@@ -142,101 +118,72 @@ class _PlanoFormViewState extends State<PlanoFormView> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(_editando ? 'Editar Plano' : 'Novo Plano')),
-        body: _carregando
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildSectionTitle('Informações'),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<Equipe>(
-                        value: _equipeSelecionada,
-                        decoration: const InputDecoration(
-                          labelText: 'Equipe',
-                          prefixIcon: Icon(Icons.shield_outlined),
-                        ),
-                        items: _controller.equipes
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.nome),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: _editando
-                            ? null
-                            : (equipe) {
-                                setState(() {
-                                  _equipeSelecionada = equipe;
-                                  _modificado = true;
-                                });
-                              },
-                        validator: (v) =>
-                            v == null ? 'Selecione uma equipe' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _nomeCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Nome do plano',
-                          prefixIcon: Icon(Icons.card_membership_outlined),
-                        ),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Informe o nome'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _valorCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Valor mensal (R\$)',
-                          prefixIcon: Icon(Icons.attach_money),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Informe o valor';
-                          }
-                          if (double.tryParse(v.trim()) == null) {
-                            return 'Valor inválido';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      FilledButton(
-                        onPressed: _salvando ? null : _salvar,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                        ),
-                        child: _salvando
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                _editando ? 'Salvar alterações' : 'Criar plano',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildSectionTitle('Informações do plano'),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nomeCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do plano',
+                    prefixIcon: Icon(Icons.card_membership_outlined),
                   ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Informe o nome' : null,
                 ),
-              ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _valorCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor mensal (R\$)',
+                    prefixIcon: Icon(Icons.attach_money),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Informe o valor';
+                    }
+                    if (double.tryParse(v.trim()) == null) {
+                      return 'Valor inválido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+                FilledButton(
+                  onPressed: _salvando ? null : _salvar,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                  ),
+                  child: _salvando
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _editando ? 'Salvar alterações' : 'Criar plano',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -248,7 +195,7 @@ class _PlanoFormViewState extends State<PlanoFormView> {
           width: 4,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            color: AppColors.accent,
             borderRadius: BorderRadius.circular(2),
           ),
         ),

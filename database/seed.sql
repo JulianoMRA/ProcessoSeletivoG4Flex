@@ -5,103 +5,55 @@ VALUES ('Flamengo', 'Série A', 3),
   ('Sport Recife', 'Série B', 2),
   ('Remo', 'Série C', 1),
   ('Aparecidense', 'Série D', 2);
--- 2. PLANOS (3 por equipe, com valor mensal)
--- Flamengo
-INSERT INTO planos (equipe_id, nome, valor)
-SELECT id,
-  'Raça',
-  29.90
-FROM equipes
-WHERE nome = 'Flamengo'
-UNION ALL
-SELECT id,
-  'Paixão',
-  59.90
-FROM equipes
-WHERE nome = 'Flamengo'
-UNION ALL
-SELECT id,
-  'Nação',
-  99.90
-FROM equipes
-WHERE nome = 'Flamengo';
--- Palmeiras
-INSERT INTO planos (equipe_id, nome, valor)
-SELECT id,
-  'Avanti',
-  35.00
-FROM equipes
-WHERE nome = 'Palmeiras'
-UNION ALL
-SELECT id,
-  'Avanti Família',
-  69.90
-FROM equipes
-WHERE nome = 'Palmeiras'
-UNION ALL
-SELECT id,
-  'Avanti Premium',
-  109.90
-FROM equipes
-WHERE nome = 'Palmeiras';
--- Sport Recife
-INSERT INTO planos (equipe_id, nome, valor)
-SELECT id,
-  'Leão Bronze',
-  19.90
-FROM equipes
-WHERE nome = 'Sport Recife'
-UNION ALL
-SELECT id,
-  'Leão Prata',
-  39.90
-FROM equipes
-WHERE nome = 'Sport Recife'
-UNION ALL
-SELECT id,
-  'Leão Ouro',
-  79.90
-FROM equipes
-WHERE nome = 'Sport Recife';
--- Remo
-INSERT INTO planos (equipe_id, nome, valor)
-SELECT id,
-  'Azulino',
-  15.00
-FROM equipes
-WHERE nome = 'Remo'
-UNION ALL
-SELECT id,
-  'Azulão',
-  35.00
-FROM equipes
-WHERE nome = 'Remo'
-UNION ALL
-SELECT id,
-  'Fenômeno Azul',
-  65.00
-FROM equipes
-WHERE nome = 'Remo';
--- Aparecidense
-INSERT INTO planos (equipe_id, nome, valor)
-SELECT id,
-  'Camaleão',
-  10.00
-FROM equipes
-WHERE nome = 'Aparecidense'
-UNION ALL
-SELECT id,
-  'Camaleão Plus',
-  25.00
-FROM equipes
-WHERE nome = 'Aparecidense'
-UNION ALL
-SELECT id,
-  'Camaleão VIP',
-  50.00
-FROM equipes
-WHERE nome = 'Aparecidense';
--- 3. TORCEDORES
+-- 2. PLANOS (independentes)
+INSERT INTO planos (nome, valor)
+VALUES ('Bronze', 19.90),
+  ('Prata', 39.90),
+  ('Ouro', 79.90),
+  ('Platina', 109.90),
+  ('Diamante', 149.90);
+-- 3. VINCULOS EQUIPE-PLANO (N:N)
+-- Flamengo: Bronze, Prata, Ouro, Platina
+INSERT INTO equipe_planos (equipe_id, plano_id)
+SELECT e.id,
+  p.id
+FROM equipes e,
+  planos p
+WHERE e.nome = 'Flamengo'
+  AND p.nome IN ('Bronze', 'Prata', 'Ouro', 'Platina');
+-- Palmeiras: Bronze, Prata, Ouro, Diamante
+INSERT INTO equipe_planos (equipe_id, plano_id)
+SELECT e.id,
+  p.id
+FROM equipes e,
+  planos p
+WHERE e.nome = 'Palmeiras'
+  AND p.nome IN ('Bronze', 'Prata', 'Ouro', 'Diamante');
+-- Sport Recife: Bronze, Prata, Ouro
+INSERT INTO equipe_planos (equipe_id, plano_id)
+SELECT e.id,
+  p.id
+FROM equipes e,
+  planos p
+WHERE e.nome = 'Sport Recife'
+  AND p.nome IN ('Bronze', 'Prata', 'Ouro');
+-- Remo: Bronze, Prata
+INSERT INTO equipe_planos (equipe_id, plano_id)
+SELECT e.id,
+  p.id
+FROM equipes e,
+  planos p
+WHERE e.nome = 'Remo'
+  AND p.nome IN ('Bronze', 'Prata');
+-- Aparecidense: Bronze, Prata, Ouro
+INSERT INTO equipe_planos (equipe_id, plano_id)
+SELECT e.id,
+  p.id
+FROM equipes e,
+  planos p
+WHERE e.nome = 'Aparecidense'
+  AND p.nome IN ('Bronze', 'Prata', 'Ouro');
+-- 4. TORCEDORES
 -- Flamengo
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'João Silva',
@@ -112,8 +64,7 @@ SELECT 'João Silva',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Flamengo'
-  AND p.nome = 'Raça'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Bronze';
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Maria Oliveira',
   '23456789012',
@@ -123,8 +74,7 @@ SELECT 'Maria Oliveira',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Flamengo'
-  AND p.nome = 'Nação'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Ouro';
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Pedro Santos',
   '34567890123',
@@ -134,8 +84,7 @@ SELECT 'Pedro Santos',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Flamengo'
-  AND p.nome = 'Paixão'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Prata';
 -- Palmeiras
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Ana Costa',
@@ -146,8 +95,7 @@ SELECT 'Ana Costa',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Palmeiras'
-  AND p.nome = 'Avanti'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Bronze';
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Lucas Ferreira',
   '56789012345',
@@ -157,8 +105,7 @@ SELECT 'Lucas Ferreira',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Palmeiras'
-  AND p.nome = 'Avanti Premium'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Diamante';
 -- Sport Recife
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Carlos Almeida',
@@ -169,8 +116,7 @@ SELECT 'Carlos Almeida',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Sport Recife'
-  AND p.nome = 'Leão Ouro'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Ouro';
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Fernanda Lima',
   '78901234567',
@@ -180,8 +126,7 @@ SELECT 'Fernanda Lima',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Sport Recife'
-  AND p.nome = 'Leão Bronze'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Bronze';
 -- Remo
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Roberto Souza',
@@ -192,8 +137,7 @@ SELECT 'Roberto Souza',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Remo'
-  AND p.nome = 'Azulão'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Prata';
 -- Aparecidense
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Juliana Martins',
@@ -204,8 +148,7 @@ SELECT 'Juliana Martins',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Aparecidense'
-  AND p.nome = 'Camaleão Plus'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Prata';
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
 SELECT 'Ricardo Barbosa',
   '01234567890',
@@ -215,5 +158,4 @@ SELECT 'Ricardo Barbosa',
 FROM equipes e,
   planos p
 WHERE e.nome = 'Aparecidense'
-  AND p.nome = 'Camaleão VIP'
-  AND p.equipe_id = e.id;
+  AND p.nome = 'Ouro';
