@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
@@ -115,9 +116,7 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
     if (_nascimento == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione a data de nascimento')),
-      );
+      AppSnackBar.info(context, 'Selecione a data de nascimento');
       return;
     }
 
@@ -133,9 +132,7 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
     if (cpfDuplicado) {
       setState(() => _salvando = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Já existe um torcedor com este CPF')),
-        );
+        AppSnackBar.erro(context, 'Já existe um torcedor com este CPF');
       }
       return;
     }
@@ -161,18 +158,13 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
     setState(() => _salvando = false);
 
     if (sucesso && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _editando ? 'Torcedor atualizado!' : 'Torcedor criado!',
-          ),
-        ),
+      AppSnackBar.sucesso(
+        context,
+        _editando ? 'Torcedor atualizado!' : 'Torcedor criado!',
       );
       Navigator.pop(context, true);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.erro ?? 'Erro desconhecido')),
-      );
+      AppSnackBar.erro(context, _controller.erro ?? 'Erro desconhecido');
     }
   }
 

@@ -17,6 +17,16 @@ const queryBase = `
 
 exports.listar = async (req, res) => {
     try {
+        const { equipe_id } = req.query;
+
+        if (equipe_id) {
+            const result = await pool.query(
+                `${queryBase} WHERE j.equipe_a_id = $1 OR j.equipe_b_id = $1 ORDER BY j.data DESC, j.hora DESC`,
+                [equipe_id]
+            );
+            return res.json(result.rows);
+        }
+
         const result = await pool.query(`${queryBase} ORDER BY j.data DESC, j.hora DESC`);
         res.json(result.rows);
     } catch (err) {
@@ -43,6 +53,19 @@ exports.criar = async (req, res) => {
     try {
         const { data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b } = req.body;
 
+        if (!data) {
+            return res.status(400).json({ erro: 'Data é obrigatória' });
+        }
+        if (!hora) {
+            return res.status(400).json({ erro: 'Hora é obrigatória' });
+        }
+        if (!equipe_a_id) {
+            return res.status(400).json({ erro: 'Equipe A é obrigatória' });
+        }
+        if (!equipe_b_id) {
+            return res.status(400).json({ erro: 'Equipe B é obrigatória' });
+        }
+
         if (equipe_a_id === equipe_b_id) {
             return res.status(400).json({ erro: 'Equipe A e Equipe B devem ser diferentes' });
         }
@@ -64,6 +87,19 @@ exports.atualizar = async (req, res) => {
     try {
         const { id } = req.params;
         const { data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b } = req.body;
+
+        if (!data) {
+            return res.status(400).json({ erro: 'Data é obrigatória' });
+        }
+        if (!hora) {
+            return res.status(400).json({ erro: 'Hora é obrigatória' });
+        }
+        if (!equipe_a_id) {
+            return res.status(400).json({ erro: 'Equipe A é obrigatória' });
+        }
+        if (!equipe_b_id) {
+            return res.status(400).json({ erro: 'Equipe B é obrigatória' });
+        }
 
         if (equipe_a_id === equipe_b_id) {
             return res.status(400).json({ erro: 'Equipe A e Equipe B devem ser diferentes' });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/plano.dart';
 
 class PlanoFormView extends StatefulWidget {
@@ -68,16 +69,13 @@ class _PlanoFormViewState extends State<PlanoFormView> {
     setState(() => _salvando = false);
 
     if (sucesso && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_editando ? 'Plano atualizado!' : 'Plano criado!'),
-        ),
+      AppSnackBar.sucesso(
+        context,
+        _editando ? 'Plano atualizado!' : 'Plano criado!',
       );
       Navigator.pop(context, true);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.erro ?? 'Erro desconhecido')),
-      );
+      AppSnackBar.erro(context, _controller.erro ?? 'Erro desconhecido');
     }
   }
 

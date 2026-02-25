@@ -22,6 +22,22 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/contadores', async (req, res) => {
+    try {
+        const pool = require('./config/database');
+        const result = await pool.query(`
+            SELECT
+                (SELECT COUNT(*) FROM equipes) AS equipes,
+                (SELECT COUNT(*) FROM torcedores) AS torcedores,
+                (SELECT COUNT(*) FROM jogos) AS jogos,
+                (SELECT COUNT(*) FROM planos) AS planos
+        `);
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ erro: 'Erro ao buscar contadores' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`API rodando em http://localhost:${PORT}`);
 });

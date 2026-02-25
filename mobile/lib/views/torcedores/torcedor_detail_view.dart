@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/views/torcedores/torcedor_form_view.dart';
 import 'package:intl/intl.dart';
@@ -171,19 +172,29 @@ class TorcedorDetailView extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(ctx);
               final controller = TorcedorController();
+              final torcedorExcluido = torcedor;
               final sucesso = await controller.excluirTorcedor(torcedor.id!);
 
               if (context.mounted) {
                 if (sucesso) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Torcedor excluído!')),
+                  AppSnackBar.sucesso(
+                    context,
+                    'Torcedor excluído',
+                    action: SnackBarAction(
+                      label: 'Desfazer',
+                      textColor: Colors.white,
+                      onPressed: () async {
+                        try {
+                          await controller.criarTorcedor(torcedorExcluido);
+                        } catch (_) {}
+                      },
+                    ),
                   );
                   Navigator.pop(context, true);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(controller.erro ?? 'Erro ao excluir'),
-                    ),
+                  AppSnackBar.erro(
+                    context,
+                    controller.erro ?? 'Erro ao excluir',
                   );
                 }
               }

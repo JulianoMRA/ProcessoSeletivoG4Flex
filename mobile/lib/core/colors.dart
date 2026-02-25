@@ -42,9 +42,9 @@ class AppColors {
   static const serieD = Color(0xFFEF4444);
 
   // Status
-  static const success = Color(0xFF22C55E);
-  static const error = Color(0xFFEF4444);
-  static const warning = Color(0xFFF59E0B);
+  static const success = Color(0xFF43A047);
+  static const error = Color(0xFFE53935);
+  static const warning = Color(0xFFFFA726);
 
   static Color corSerie(String serie) {
     return switch (serie) {

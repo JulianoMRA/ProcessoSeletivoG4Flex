@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/services/api_service.dart';
@@ -77,9 +78,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_planosSelecionados.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione pelo menos um plano')),
-      );
+      AppSnackBar.info(context, 'Selecione pelo menos um plano');
       return;
     }
 
@@ -108,16 +107,13 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     setState(() => _salvando = false);
 
     if (sucesso && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_editando ? 'Equipe atualizada!' : 'Equipe criada!'),
-        ),
+      AppSnackBar.sucesso(
+        context,
+        _editando ? 'Equipe atualizada!' : 'Equipe criada!',
       );
       Navigator.pop(context, true);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.erro ?? 'Erro desconhecido')),
-      );
+      AppSnackBar.erro(context, _controller.erro ?? 'Erro desconhecido');
     }
   }
 
@@ -186,9 +182,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
         });
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Erro ao criar plano')));
+          AppSnackBar.erro(context, 'Erro ao criar plano');
         }
       }
     }

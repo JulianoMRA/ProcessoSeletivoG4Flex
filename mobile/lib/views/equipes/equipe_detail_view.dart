@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
@@ -19,11 +22,17 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
   late Equipe _equipe;
   bool _carregando = true;
 
+  int _vitorias = 0;
+  int _empates = 0;
+  int _derrotas = 0;
+  int _totalJogos = 0;
+
   @override
   void initState() {
     super.initState();
     _equipe = widget.equipe;
     _carregarDetalhes();
+    _carregarEstatisticas();
   }
 
   Future<void> _carregarDetalhes() async {
@@ -38,6 +47,39 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
     } catch (e) {
       if (mounted) setState(() => _carregando = false);
     }
+  }
+
+  Future<void> _carregarEstatisticas() async {
+    try {
+      final uri = Uri.parse(
+        '${ApiService.baseUrl}/jogos?equipe_id=${_equipe.id}',
+      );
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final jogos = json.decode(response.body) as List;
+        int v = 0, e = 0, d = 0;
+        for (final jogo in jogos) {
+          final vencedor = jogo['vencedor'];
+          if (vencedor == 'empate') {
+            e++;
+          } else if ((vencedor == 'equipe_a' &&
+                  jogo['equipe_a_id'] == _equipe.id) ||
+              (vencedor == 'equipe_b' && jogo['equipe_b_id'] == _equipe.id)) {
+            v++;
+          } else {
+            d++;
+          }
+        }
+        if (mounted) {
+          setState(() {
+            _vitorias = v;
+            _empates = e;
+            _derrotas = d;
+            _totalJogos = jogos.length;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -78,6 +120,8 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
             _buildHeader(cor),
             const SizedBox(height: 16),
             _buildStats(context),
+            const SizedBox(height: 16),
+            _buildJogosStats(),
             const SizedBox(height: 24),
             _buildPlanos(context),
           ],
@@ -172,6 +216,120 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                 fontSize: 28,
                 fontWeight: FontWeight.w800,
                 color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJogosStats() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.jogos.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.sports_score_rounded,
+                    color: AppColors.jogos,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Text(
+                    'Desempenho',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$_totalJogos jogos',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            if (_totalJogos > 0) ...[
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  _buildStatItem(
+                    icon: Icons.emoji_events_rounded,
+                    label: 'Vitórias',
+                    value: _vitorias,
+                    color: AppColors.success,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildStatItem(
+                    icon: Icons.handshake_rounded,
+                    label: 'Empates',
+                    value: _empates,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildStatItem(
+                    icon: Icons.trending_down_rounded,
+                    label: 'Derrotas',
+                    value: _derrotas,
+                    color: AppColors.error,
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required int value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 6),
+            Text(
+              value.toString(),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -296,15 +454,12 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
 
               if (context.mounted) {
                 if (sucesso) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Equipe excluída!')),
-                  );
+                  AppSnackBar.sucesso(context, 'Equipe excluída');
                   Navigator.pop(context, true);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(controller.erro ?? 'Erro ao excluir'),
-                    ),
+                  AppSnackBar.erro(
+                    context,
+                    controller.erro ?? 'Erro ao excluir',
                   );
                 }
               }

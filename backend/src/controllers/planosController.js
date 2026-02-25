@@ -51,6 +51,13 @@ exports.criar = async (req, res) => {
     try {
         const { nome, valor } = req.body;
 
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (valor === undefined || valor === null || isNaN(valor) || valor < 0) {
+            return res.status(400).json({ erro: 'Valor inválido' });
+        }
+
         const result = await pool.query(
             'INSERT INTO planos (nome, valor) VALUES ($1, $2) RETURNING *',
             [nome, valor]
@@ -66,6 +73,13 @@ exports.atualizar = async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, valor } = req.body;
+
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (valor === undefined || valor === null || isNaN(valor) || valor < 0) {
+            return res.status(400).json({ erro: 'Valor inválido' });
+        }
 
         const result = await pool.query(
             'UPDATE planos SET nome = $1, valor = $2 WHERE id = $3 RETURNING *',

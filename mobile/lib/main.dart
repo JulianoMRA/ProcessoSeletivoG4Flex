@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fala_torcedor/core/theme.dart';
-import 'package:fala_torcedor/views/home_view.dart';
+import 'package:fala_torcedor/views/splash_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ class FalaTorcedorApp extends StatelessWidget {
       ],
       supportedLocales: const [Locale('pt', 'BR'), Locale('en')],
       theme: AppTheme.light,
-      home: const HomeView(),
+      home: const SplashView(),
     );
   }
 }

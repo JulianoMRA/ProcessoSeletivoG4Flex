@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/views/jogos/jogo_form_view.dart';
 import 'package:fala_torcedor/services/api_service.dart';
@@ -52,16 +53,25 @@ class _JogoDetailViewState extends State<JogoDetailView> {
     try {
       await ApiService().deleteJogo(_jogo.id!);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Jogo excluído com sucesso')),
+        final jogoExcluido = _jogo;
+        AppSnackBar.sucesso(
+          context,
+          'Jogo excluído',
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.white,
+            onPressed: () async {
+              try {
+                await ApiService().createJogo(jogoExcluido);
+              } catch (_) {}
+            },
+          ),
         );
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erro ao excluir: $e')));
+        AppSnackBar.erro(context, 'Erro ao excluir: $e');
       }
     }
   }

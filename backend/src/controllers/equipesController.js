@@ -40,6 +40,16 @@ exports.criar = async (req, res) => {
     try {
         const { nome, serie, plano_ids } = req.body;
 
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (!serie || !serie.trim()) {
+            return res.status(400).json({ erro: 'Série é obrigatória' });
+        }
+        if (!plano_ids || plano_ids.length === 0) {
+            return res.status(400).json({ erro: 'Selecione pelo menos um plano' });
+        }
+
         const equipe = await pool.query(
             'INSERT INTO equipes (nome, serie) VALUES ($1, $2) RETURNING *',
             [nome, serie]
@@ -73,6 +83,13 @@ exports.atualizar = async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, serie, plano_ids } = req.body;
+
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (!serie || !serie.trim()) {
+            return res.status(400).json({ erro: 'Série é obrigatória' });
+        }
 
         await pool.query(
             'UPDATE equipes SET nome = $1, serie = $2 WHERE id = $3',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/jogo_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:intl/intl.dart';
@@ -120,15 +121,11 @@ class _JogoFormViewState extends State<JogoFormView> {
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
     if (_data == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Selecione a data do jogo')));
+      AppSnackBar.info(context, 'Selecione a data do jogo');
       return;
     }
     if (_hora == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecione o horário do jogo')),
-      );
+      AppSnackBar.info(context, 'Selecione o horário do jogo');
       return;
     }
 
@@ -153,16 +150,13 @@ class _JogoFormViewState extends State<JogoFormView> {
     setState(() => _salvando = false);
 
     if (sucesso && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_editando ? 'Jogo atualizado!' : 'Jogo criado!'),
-        ),
+      AppSnackBar.sucesso(
+        context,
+        _editando ? 'Jogo atualizado!' : 'Jogo criado!',
       );
       Navigator.pop(context, true);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_controller.erro ?? 'Erro desconhecido')),
-      );
+      AppSnackBar.erro(context, _controller.erro ?? 'Erro desconhecido');
     }
   }
 

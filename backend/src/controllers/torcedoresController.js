@@ -45,6 +45,22 @@ exports.criar = async (req, res) => {
     try {
         const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
 
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (!cpf || !cpf.trim()) {
+            return res.status(400).json({ erro: 'CPF é obrigatório' });
+        }
+        if (!nascimento) {
+            return res.status(400).json({ erro: 'Data de nascimento é obrigatória' });
+        }
+        if (!equipe_id) {
+            return res.status(400).json({ erro: 'Equipe é obrigatória' });
+        }
+        if (!plano_id) {
+            return res.status(400).json({ erro: 'Plano é obrigatório' });
+        }
+
         const result = await pool.query(
             'INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [nome, cpf, nascimento, equipe_id, plano_id]
@@ -68,6 +84,22 @@ exports.atualizar = async (req, res) => {
     try {
         const { id } = req.params;
         const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
+
+        if (!nome || !nome.trim()) {
+            return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (!cpf || !cpf.trim()) {
+            return res.status(400).json({ erro: 'CPF é obrigatório' });
+        }
+        if (!nascimento) {
+            return res.status(400).json({ erro: 'Data de nascimento é obrigatória' });
+        }
+        if (!equipe_id) {
+            return res.status(400).json({ erro: 'Equipe é obrigatória' });
+        }
+        if (!plano_id) {
+            return res.status(400).json({ erro: 'Plano é obrigatório' });
+        }
 
         const anterior = await pool.query(
             'SELECT equipe_id FROM torcedores WHERE id = $1', [id]

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 import 'package:fala_torcedor/views/planos/plano_form_view.dart';
@@ -275,15 +276,12 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
 
               if (context.mounted) {
                 if (sucesso) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Plano excluído!')),
-                  );
+                  AppSnackBar.sucesso(context, 'Plano excluído');
                   Navigator.pop(context, true);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(controller.erro ?? 'Erro ao excluir'),
-                    ),
+                  AppSnackBar.erro(
+                    context,
+                    controller.erro ?? 'Erro ao excluir',
                   );
                 }
               }

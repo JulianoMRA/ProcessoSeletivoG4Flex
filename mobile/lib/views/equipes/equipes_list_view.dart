@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
 import 'package:fala_torcedor/views/equipes/equipe_detail_view.dart';
@@ -511,19 +512,22 @@ class _EquipesListViewState extends State<EquipesListView> {
         itemCount: lista.length,
         itemBuilder: (context, index) {
           final equipe = lista[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _EquipeCard(
-              equipe: equipe,
-              onTap: () async {
-                final atualizou = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EquipeDetailView(equipe: equipe),
-                  ),
-                );
-                if (atualizou == true) _controller.carregarEquipes();
-              },
+          return StaggeredListItem(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _EquipeCard(
+                equipe: equipe,
+                onTap: () async {
+                  final atualizou = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EquipeDetailView(equipe: equipe),
+                    ),
+                  );
+                  if (atualizou == true) _controller.carregarEquipes();
+                },
+              ),
             ),
           );
         },

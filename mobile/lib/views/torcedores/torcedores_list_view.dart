@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/views/torcedores/torcedor_form_view.dart';
@@ -521,19 +522,22 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
         itemCount: lista.length,
         itemBuilder: (context, index) {
           final torcedor = lista[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _TorcedorCard(
-              torcedor: torcedor,
-              onTap: () async {
-                final atualizou = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TorcedorDetailView(torcedor: torcedor),
-                  ),
-                );
-                if (atualizou == true) _controller.carregarTorcedores();
-              },
+          return StaggeredListItem(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _TorcedorCard(
+                torcedor: torcedor,
+                onTap: () async {
+                  final atualizou = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TorcedorDetailView(torcedor: torcedor),
+                    ),
+                  );
+                  if (atualizou == true) _controller.carregarTorcedores();
+                },
+              ),
             ),
           );
         },

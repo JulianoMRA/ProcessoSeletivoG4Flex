@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/services/api_service.dart';
 import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
 import 'package:fala_torcedor/views/jogos/jogos_list_view.dart';
 import 'package:fala_torcedor/views/planos/planos_list_view.dart';
@@ -18,6 +21,8 @@ class _HomeViewState extends State<HomeView>
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
+  Map<String, int> _contadores = {};
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +36,27 @@ class _HomeViewState extends State<HomeView>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+    _carregarContadores();
+  }
+
+  Future<void> _carregarContadores() async {
+    try {
+      final uri = Uri.parse('${ApiService.baseUrl}/contadores');
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _contadores = {
+              'equipes': int.tryParse('${data['equipes']}') ?? 0,
+              'torcedores': int.tryParse('${data['torcedores']}') ?? 0,
+              'jogos': int.tryParse('${data['jogos']}') ?? 0,
+              'planos': int.tryParse('${data['planos']}') ?? 0,
+            };
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -132,44 +158,60 @@ class _HomeViewState extends State<HomeView>
           icon: Icons.shield_rounded,
           title: 'Equipes',
           subtitle: 'Cadastrar e gerenciar equipes',
+          contador: _contadores['equipes'],
           gradient: [AppColors.primary, AppColors.primaryLight],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const EquipesListView()),
-          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EquipesListView()),
+            );
+            _carregarContadores();
+          },
         ),
         const SizedBox(height: 16),
         _MenuCard(
           icon: Icons.people_rounded,
           title: 'Torcedores',
           subtitle: 'Cadastrar e gerenciar torcedores',
+          contador: _contadores['torcedores'],
           gradient: [AppColors.secondary, AppColors.secondaryLight],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const TorcedoresListView()),
-          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TorcedoresListView()),
+            );
+            _carregarContadores();
+          },
         ),
         const SizedBox(height: 16),
         _MenuCard(
           icon: Icons.card_membership_rounded,
           title: 'Planos',
           subtitle: 'Gerenciar planos de sócio',
+          contador: _contadores['planos'],
           gradient: [AppColors.accent, AppColors.accentLight],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PlanosListView()),
-          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PlanosListView()),
+            );
+            _carregarContadores();
+          },
         ),
         const SizedBox(height: 16),
         _MenuCard(
           icon: Icons.sports_score_rounded,
           title: 'Jogos',
           subtitle: 'Registrar e consultar jogos',
+          contador: _contadores['jogos'],
           gradient: [AppColors.jogos, AppColors.jogosLight],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const JogosListView()),
-          ),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const JogosListView()),
+            );
+            _carregarContadores();
+          },
         ),
       ],
     );
@@ -180,6 +222,7 @@ class _MenuCard extends StatefulWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final int? contador;
   final List<Color> gradient;
   final VoidCallback onTap;
 
@@ -187,6 +230,7 @@ class _MenuCard extends StatefulWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.contador,
     required this.gradient,
     required this.onTap,
   });
@@ -260,6 +304,30 @@ class _MenuCardState extends State<_MenuCard> {
                   ],
                 ),
               ),
+              if (widget.contador != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.gradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${widget.contador}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(

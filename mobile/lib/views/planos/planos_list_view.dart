@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/views/planos/plano_detail_view.dart';
 import 'package:fala_torcedor/views/planos/plano_form_view.dart';
@@ -350,18 +351,21 @@ class _PlanosListViewState extends State<PlanosListView> {
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         itemCount: planos.length,
-        itemBuilder: (context, index) => _PlanoCard(
-          plano: planos[index],
-          formatarValor: _formatador.format,
-          onTap: () async {
-            final alterou = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PlanoDetailView(plano: planos[index]),
-              ),
-            );
-            if (alterou == true) _controller.carregarPlanos();
-          },
+        itemBuilder: (context, index) => StaggeredListItem(
+          index: index,
+          child: _PlanoCard(
+            plano: planos[index],
+            formatarValor: _formatador.format,
+            onTap: () async {
+              final alterou = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PlanoDetailView(plano: planos[index]),
+                ),
+              );
+              if (alterou == true) _controller.carregarPlanos();
+            },
+          ),
         ),
       ),
     );
