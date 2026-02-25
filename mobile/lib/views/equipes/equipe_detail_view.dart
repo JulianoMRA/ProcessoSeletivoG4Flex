@@ -152,10 +152,10 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                 children: [
                   Text(
                     _equipe.nome,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -205,10 +205,13 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
               ),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Sócios-torcedores',
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             Text(
@@ -247,21 +250,21 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Desempenho',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 Text(
                   '$_totalJogos jogos',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -343,20 +346,20 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
             Icon(
               Icons.card_membership_rounded,
               size: 20,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               'Planos de sócio',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -376,7 +379,9 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
               child: Center(
                 child: Text(
                   'Nenhum plano cadastrado',
-                  style: TextStyle(color: AppColors.textHint),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -413,10 +418,10 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                 ),
                 title: Text(
                   entry.value.nome,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 trailing: Text(
@@ -445,11 +450,25 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
     if (!confirmou || !context.mounted) return;
 
     final controller = EquipeController();
+    final equipeExcluida = _equipe;
+    final planoIds = _equipe.planos.map((p) => p.id!).toList();
     final sucesso = await controller.excluirEquipe(_equipe.id!);
 
     if (context.mounted) {
       if (sucesso) {
-        AppSnackBar.sucesso(context, 'Equipe excluída');
+        AppSnackBar.sucesso(
+          context,
+          'Equipe excluída',
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.white,
+            onPressed: () async {
+              try {
+                await controller.criarEquipe(equipeExcluida, planoIds);
+              } catch (_) {}
+            },
+          ),
+        );
         Navigator.pop(context, true);
       } else {
         AppSnackBar.erro(context, controller.erro ?? 'Erro ao excluir');

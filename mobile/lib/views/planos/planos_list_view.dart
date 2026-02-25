@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/empty_state.dart';
+import 'package:fala_torcedor/core/shimmer_loading.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/views/planos/plano_detail_view.dart';
@@ -87,12 +88,12 @@ class _PlanosListViewState extends State<PlanosListView> {
                 children: [
                   const Icon(Icons.tune_rounded, color: AppColors.primary),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'Ordenação',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(ctx).colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -109,12 +110,12 @@ class _PlanosListViewState extends State<PlanosListView> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Ordenar por',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -145,12 +146,12 @@ class _PlanosListViewState extends State<PlanosListView> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Direção',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
@@ -195,7 +196,9 @@ class _PlanosListViewState extends State<PlanosListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surfaceVariant,
+          color: selected
+              ? AppColors.primary
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -204,13 +207,17 @@ class _PlanosListViewState extends State<PlanosListView> {
             Icon(
               icon,
               size: 18,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -273,7 +280,7 @@ class _PlanosListViewState extends State<PlanosListView> {
 
   Widget _buildBody() {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ShimmerLoading.cards();
     }
 
     if (_controller.erro != null) {
@@ -376,6 +383,7 @@ class _PlanoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
@@ -389,10 +397,8 @@ class _PlanoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [AppColors.accent, AppColors.accentLight],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -409,10 +415,10 @@ class _PlanoCard extends StatelessWidget {
                     children: [
                       Text(
                         plano.nome,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
-                          color: AppColors.textPrimary,
+                          color: cs.onSurface,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -437,10 +443,7 @@ class _PlanoCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textHint,
-                ),
+                Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
               ],
             ),
           ),

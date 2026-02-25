@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/main.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
 import 'package:fala_torcedor/views/jogos/jogos_list_view.dart';
@@ -185,6 +186,24 @@ class _HomeViewState extends State<HomeView>
             },
           ),
           const Divider(),
+          ListenableBuilder(
+            listenable: themeProvider,
+            builder: (context, _) => SwitchListTile(
+              secondary: Icon(
+                themeProvider.isDark
+                    ? Icons.dark_mode_rounded
+                    : Icons.light_mode_rounded,
+                color: AppColors.primary,
+              ),
+              title: const Text(
+                'Modo escuro',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              value: themeProvider.isDark,
+              onChanged: (_) => themeProvider.toggle(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            ),
+          ),
           _buildDrawerItem(
             icon: Icons.info_outline_rounded,
             label: 'Sobre',
@@ -207,9 +226,9 @@ class _HomeViewState extends State<HomeView>
       leading: Icon(icon, color: AppColors.primary),
       title: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       onTap: onTap,
@@ -246,32 +265,35 @@ class _HomeViewState extends State<HomeView>
             const Text('Sobre', style: TextStyle(fontWeight: FontWeight.w700)),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Fala, Torcedor! v2.0.0',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Aplicação CRUD para gerenciamento de equipes esportivas, planos de sócio-torcedor, torcedores e jogos.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
                 height: 1.4,
               ),
             ),
-            SizedBox(height: 16),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               'Processo Seletivo G4 Flex',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               'Desenvolvido com Flutter + Node.js + PostgreSQL',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -323,19 +345,19 @@ class _HomeViewState extends State<HomeView>
                 children: [
                   Text(
                     '${_saudacao()}!',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Fala, Torcedor!',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(ctx).colorScheme.onSurface,
                       letterSpacing: -1,
                       height: 1.1,
                     ),
@@ -347,17 +369,20 @@ class _HomeViewState extends State<HomeView>
               onPressed: () => Scaffold.of(ctx).openDrawer(),
               icon: const Icon(Icons.menu_rounded),
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.surfaceVariant,
-                foregroundColor: AppColors.textPrimary,
+                backgroundColor: Theme.of(ctx).colorScheme.outlineVariant,
+                foregroundColor: Theme.of(ctx).colorScheme.onSurface,
                 padding: const EdgeInsets.all(12),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Gerencie equipes, planos, torcedores e jogos',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -456,6 +481,7 @@ class _MenuCardState extends State<_MenuCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
@@ -467,9 +493,9 @@ class _MenuCardState extends State<_MenuCard> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: cs.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.borderLight),
+            border: Border.all(color: cs.outlineVariant),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -499,18 +525,18 @@ class _MenuCardState extends State<_MenuCard> {
                   children: [
                     Text(
                       widget.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -543,13 +569,13 @@ class _MenuCardState extends State<_MenuCard> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                  color: cs.outlineVariant,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_forward_rounded,
                   size: 18,
-                  color: AppColors.textSecondary,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],

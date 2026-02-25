@@ -267,8 +267,8 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
                             style: TextStyle(
                               fontSize: 16,
                               color: _nascimento != null
-                                  ? AppColors.textPrimary
-                                  : AppColors.textHint,
+                                  ? Theme.of(context).colorScheme.onSurface
+                                  : Theme.of(context).hintColor,
                             ),
                           ),
                         ),
@@ -378,10 +378,10 @@ class _TorcedorFormViewState extends State<TorcedorFormView> {
         const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

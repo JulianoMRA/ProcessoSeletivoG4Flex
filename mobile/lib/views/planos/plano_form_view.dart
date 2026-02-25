@@ -200,10 +200,10 @@ class _PlanoFormViewState extends State<PlanoFormView> {
         const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

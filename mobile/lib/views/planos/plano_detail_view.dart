@@ -116,10 +116,10 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             Expanded(
               child: Text(
                 widget.plano.nome,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -149,10 +149,7 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             ),
             const SizedBox(width: 14),
             const Expanded(
-              child: Text(
-                'Valor mensal',
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
-              ),
+              child: Text('Valor mensal', style: TextStyle(fontSize: 15)),
             ),
             Text(
               _formatador.format(widget.plano.valor),
@@ -172,20 +169,20 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
             Icon(
               Icons.shield_rounded,
               size: 20,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
               'Equipes vinculadas',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -205,7 +202,9 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
               child: Center(
                 child: Text(
                   'Nenhuma equipe vinculada',
-                  style: TextStyle(color: AppColors.textHint),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -227,10 +226,10 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
                 ),
                 title: Text(
                   equipe['nome'] ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 trailing: Container(
@@ -268,11 +267,24 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
     if (!confirmou || !context.mounted) return;
 
     final controller = PlanoController();
+    final planoExcluido = widget.plano;
     final sucesso = await controller.excluirPlano(widget.plano.id!);
 
     if (context.mounted) {
       if (sucesso) {
-        AppSnackBar.sucesso(context, 'Plano excluído');
+        AppSnackBar.sucesso(
+          context,
+          'Plano excluído',
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.white,
+            onPressed: () async {
+              try {
+                await controller.criarPlano(planoExcluido);
+              } catch (_) {}
+            },
+          ),
+        );
         Navigator.pop(context, true);
       } else {
         AppSnackBar.erro(context, controller.erro ?? 'Erro ao excluir');

@@ -58,7 +58,7 @@ class TorcedorDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
+            _buildHeader(context),
             const SizedBox(height: 16),
             _buildInfoCard(),
           ],
@@ -67,7 +67,7 @@ class TorcedorDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -105,18 +105,18 @@ class TorcedorDetailView extends StatelessWidget {
                 children: [
                   Text(
                     torcedor.nome,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatarCpf(torcedor.cpf),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -207,6 +207,7 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return ListTile(
       leading: Container(
         width: 40,
@@ -219,14 +220,14 @@ class _InfoTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
       ),
       subtitle: Text(
         valor,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: cs.onSurface,
         ),
       ),
     );

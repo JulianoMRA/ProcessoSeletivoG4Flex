@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/empty_state.dart';
+import 'package:fala_torcedor/core/shimmer_loading.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
@@ -104,12 +105,12 @@ class _EquipesListViewState extends State<EquipesListView> {
                 children: [
                   const Icon(Icons.tune_rounded, color: AppColors.primary),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'Filtros e ordenação',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(ctx).colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -129,12 +130,12 @@ class _EquipesListViewState extends State<EquipesListView> {
               const SizedBox(height: 20),
 
               // Filtro por série
-              const Text(
+              Text(
                 'Filtrar por série',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -166,12 +167,12 @@ class _EquipesListViewState extends State<EquipesListView> {
               const SizedBox(height: 24),
 
               // Ordenação
-              const Text(
+              Text(
                 'Ordenar por',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -213,12 +214,12 @@ class _EquipesListViewState extends State<EquipesListView> {
               // Direção
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Direção',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
@@ -264,13 +265,17 @@ class _EquipesListViewState extends State<EquipesListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? chipColor : AppColors.surfaceVariant,
+          color: selected
+              ? chipColor
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -290,7 +295,9 @@ class _EquipesListViewState extends State<EquipesListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surfaceVariant,
+          color: selected
+              ? AppColors.primary
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -299,13 +306,17 @@ class _EquipesListViewState extends State<EquipesListView> {
             Icon(
               icon,
               size: 18,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -380,15 +391,15 @@ class _EquipesListViewState extends State<EquipesListView> {
           Icon(
             Icons.filter_list_rounded,
             size: 16,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               _descricaoFiltros(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -432,7 +443,7 @@ class _EquipesListViewState extends State<EquipesListView> {
 
   Widget _buildBody() {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ShimmerLoading.cards();
     }
 
     if (_controller.erro != null) {
@@ -536,6 +547,7 @@ class _EquipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final corSerie = AppColors.corSerie(equipe.serie);
+    final cs = Theme.of(context).colorScheme;
 
     return Card(
       child: InkWell(
@@ -560,10 +572,10 @@ class _EquipeCard extends StatelessWidget {
                   children: [
                     Text(
                       equipe.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
-                        color: AppColors.textPrimary,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -588,17 +600,17 @@ class _EquipeCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Icon(
+                        Icon(
                           Icons.people_outline_rounded,
                           size: 14,
-                          color: AppColors.textHint,
+                          color: cs.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${equipe.qtdSocios} sócios',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -606,10 +618,7 @@ class _EquipeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textHint,
-              ),
+              Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant),
             ],
           ),
         ),

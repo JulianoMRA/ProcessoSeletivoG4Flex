@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/jogo_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/empty_state.dart';
+import 'package:fala_torcedor/core/shimmer_loading.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/models/equipe.dart';
@@ -129,12 +130,12 @@ class _JogosListViewState extends State<JogosListView> {
                 children: [
                   const Icon(Icons.tune_rounded, color: AppColors.jogos),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     'Filtros e Ordenação',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(ctx).colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
@@ -155,12 +156,12 @@ class _JogosListViewState extends State<JogosListView> {
               const SizedBox(height: 20),
 
               // Filtro por equipe
-              const Text(
+              Text(
                 'Equipe',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -193,12 +194,12 @@ class _JogosListViewState extends State<JogosListView> {
               const SizedBox(height: 20),
 
               // Filtro por resultado
-              const Text(
+              Text(
                 'Resultado',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -238,12 +239,12 @@ class _JogosListViewState extends State<JogosListView> {
               const SizedBox(height: 20),
 
               // Ordenação
-              const Text(
+              Text(
                 'Ordenar por',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -274,12 +275,12 @@ class _JogosListViewState extends State<JogosListView> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Direção',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
@@ -324,7 +325,9 @@ class _JogosListViewState extends State<JogosListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.jogos : AppColors.surfaceVariant,
+          color: selected
+              ? AppColors.jogos
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -333,13 +336,17 @@ class _JogosListViewState extends State<JogosListView> {
             Icon(
               icon,
               size: 18,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -402,7 +409,7 @@ class _JogosListViewState extends State<JogosListView> {
 
   Widget _buildBody() {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ShimmerLoading.cards();
     }
 
     if (_controller.erro != null) {
@@ -517,6 +524,7 @@ class _JogoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Card(
@@ -532,14 +540,14 @@ class _JogoCard extends StatelessWidget {
                     Icon(
                       Icons.calendar_today_rounded,
                       size: 14,
-                      color: AppColors.textHint,
+                      color: cs.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '${formatarData(jogo.data)} • ${jogo.hora}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     const Spacer(),
@@ -574,7 +582,7 @@ class _JogoCard extends StatelessWidget {
                           fontWeight: jogo.vencedor == 'equipe_a'
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: cs.onSurface,
                         ),
                         textAlign: TextAlign.right,
                       ),
@@ -611,7 +619,7 @@ class _JogoCard extends StatelessWidget {
                           fontWeight: jogo.vencedor == 'equipe_b'
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: AppColors.textPrimary,
+                          color: cs.onSurface,
                         ),
                       ),
                     ),

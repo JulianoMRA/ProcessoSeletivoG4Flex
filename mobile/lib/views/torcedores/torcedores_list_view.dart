@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/empty_state.dart';
+import 'package:fala_torcedor/core/shimmer_loading.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/equipe.dart';
@@ -22,6 +23,7 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
   final _buscaCtrl = TextEditingController();
 
   Equipe? _filtroEquipe;
+  String? _filtroPlano;
   OrdenacaoTorcedor _ordenacao = OrdenacaoTorcedor.nome;
   bool _ordemCrescente = true;
 
@@ -31,6 +33,11 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
     // Filtro por equipe
     if (_filtroEquipe != null) {
       lista = lista.where((t) => t.equipeId == _filtroEquipe!.id).toList();
+    }
+
+    // Filtro por plano
+    if (_filtroPlano != null) {
+      lista = lista.where((t) => t.plano?.nome == _filtroPlano).toList();
     }
 
     // Filtro por busca
@@ -105,12 +112,12 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                   children: [
                     const Icon(Icons.tune_rounded, color: AppColors.primary),
                     const SizedBox(width: 10),
-                    const Text(
+                    Text(
                       'Filtros e ordenação',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(ctx).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -118,6 +125,7 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                       onPressed: () {
                         setModalState(() {
                           _filtroEquipe = null;
+                          _filtroPlano = null;
                           _ordenacao = OrdenacaoTorcedor.nome;
                           _ordemCrescente = true;
                         });
@@ -130,12 +138,12 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                 const SizedBox(height: 20),
 
                 // Filtro por equipe
-                const Text(
+                Text(
                   'Filtrar por equipe',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -166,13 +174,54 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                 ),
                 const SizedBox(height: 24),
 
+                // Filtro por plano
+                Text(
+                  'Filtrar por plano',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildFilterOption(
+                      label: 'Todos',
+                      selected: _filtroPlano == null,
+                      onTap: () {
+                        setModalState(() => _filtroPlano = null);
+                        setState(() {});
+                      },
+                    ),
+                    ..._controller.torcedores
+                        .where((t) => t.plano != null)
+                        .map((t) => t.plano!.nome)
+                        .toSet()
+                        .map(
+                          (nome) => _buildFilterOption(
+                            label: nome,
+                            selected: _filtroPlano == nome,
+                            color: AppColors.secondary,
+                            onTap: () {
+                              setModalState(() => _filtroPlano = nome);
+                              setState(() {});
+                            },
+                          ),
+                        ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
                 // Ordenação
-                const Text(
+                Text(
                   'Ordenar por',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -220,12 +269,12 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                 // Direção
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Direção',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const Spacer(),
@@ -272,13 +321,17 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? chipColor : AppColors.surfaceVariant,
+          color: selected
+              ? chipColor
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
+            color: selected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
@@ -299,7 +352,9 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surfaceVariant,
+          color: selected
+              ? AppColors.primary
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -308,13 +363,17 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
             Icon(
               icon,
               size: 18,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: selected ? Colors.white : AppColors.textSecondary,
+                color: selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -386,18 +445,18 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.filter_list_rounded,
             size: 16,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               _descricaoFiltros(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -442,7 +501,7 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
 
   Widget _buildBody() {
     if (_controller.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ShimmerLoading.cards();
     }
 
     if (_controller.erro != null) {
@@ -598,27 +657,29 @@ class _TorcedorCard extends StatelessWidget {
                   children: [
                     Text(
                       torcedor.nome,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.shield_outlined,
                           size: 14,
-                          color: AppColors.textHint,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '$nomeEquipe  •  $nomePlano',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -628,9 +689,9 @@ class _TorcedorCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textHint,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),

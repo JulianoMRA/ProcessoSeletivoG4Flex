@@ -17,7 +17,7 @@ const queryBase = `
 
 exports.listar = async (req, res) => {
     try {
-        const { equipe_id } = req.query;
+        const { equipe_id, page, limit } = req.query;
 
         if (equipe_id) {
             const result = await pool.query(
@@ -25,6 +25,22 @@ exports.listar = async (req, res) => {
                 [equipe_id]
             );
             return res.json(result.rows);
+        }
+
+        if (page && limit) {
+            const pagina = Math.max(1, parseInt(page));
+            const limite = Math.min(100, Math.max(1, parseInt(limit)));
+            const offset = (pagina - 1) * limite;
+
+            const countResult = await pool.query('SELECT COUNT(*) FROM jogos');
+            const total = parseInt(countResult.rows[0].count);
+
+            const result = await pool.query(
+                `${queryBase} ORDER BY j.data DESC, j.hora DESC LIMIT $1 OFFSET $2`,
+                [limite, offset]
+            );
+
+            return res.json({ dados: result.rows, total, pagina, limite });
         }
 
         const result = await pool.query(`${queryBase} ORDER BY j.data DESC, j.hora DESC`);

@@ -2,15 +2,33 @@ const pool = require('../config/database');
 
 exports.listar = async (req, res) => {
     try {
-        const result = await pool.query(`
+        const { page, limit } = req.query;
+
+        const baseQuery = `
       SELECT t.*, 
              e.nome AS equipe_nome, e.serie AS equipe_serie,
              p.nome AS plano_nome, p.valor AS plano_valor
       FROM torcedores t
       JOIN equipes e ON t.equipe_id = e.id
-      JOIN planos p ON t.plano_id = p.id
-      ORDER BY t.nome
-    `);
+      JOIN planos p ON t.plano_id = p.id`;
+
+        if (page && limit) {
+            const pagina = Math.max(1, parseInt(page));
+            const limite = Math.min(100, Math.max(1, parseInt(limit)));
+            const offset = (pagina - 1) * limite;
+
+            const countResult = await pool.query('SELECT COUNT(*) FROM torcedores');
+            const total = parseInt(countResult.rows[0].count);
+
+            const result = await pool.query(
+                `${baseQuery} ORDER BY t.nome LIMIT $1 OFFSET $2`,
+                [limite, offset]
+            );
+
+            return res.json({ dados: result.rows, total, pagina, limite });
+        }
+
+        const result = await pool.query(`${baseQuery} ORDER BY t.nome`);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ erro: 'Erro ao listar torcedores' });

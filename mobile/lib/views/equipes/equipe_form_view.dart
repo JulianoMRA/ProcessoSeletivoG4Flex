@@ -291,7 +291,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                         'Selecione os planos disponíveis para esta equipe',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textHint,
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -344,7 +344,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
           child: Center(
             child: Text(
               'Nenhum plano cadastrado. Crie um abaixo.',
-              style: TextStyle(color: AppColors.textHint),
+              style: TextStyle(color: Theme.of(context).hintColor),
             ),
           ),
         ),
@@ -364,7 +364,9 @@ class _EquipeFormViewState extends State<EquipeFormView> {
           checkmarkColor: AppColors.primary,
           labelStyle: TextStyle(
             fontWeight: selecionado ? FontWeight.w600 : FontWeight.w400,
-            color: selecionado ? AppColors.primary : AppColors.textSecondary,
+            color: selecionado
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           onSelected: (selected) {
             setState(() {
@@ -395,10 +397,10 @@ class _EquipeFormViewState extends State<EquipeFormView> {
         const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

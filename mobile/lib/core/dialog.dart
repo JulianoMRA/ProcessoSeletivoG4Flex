@@ -41,9 +41,9 @@ class AppDialog {
         ),
         content: Text(
           mensagem,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
-            color: AppColors.textSecondary,
+            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
             height: 1.4,
           ),
         ),

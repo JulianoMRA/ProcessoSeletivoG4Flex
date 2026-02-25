@@ -296,12 +296,12 @@ class _JogoDetailViewState extends State<JogoDetailView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Informações',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 16),
@@ -339,15 +339,16 @@ class _JogoDetailViewState extends State<JogoDetailView> {
     required String label,
     required String value,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
+            color: cs.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 18, color: AppColors.textSecondary),
+          child: Icon(icon, size: 18, color: cs.onSurfaceVariant),
         ),
         const SizedBox(width: 12),
         Column(
@@ -355,14 +356,14 @@ class _JogoDetailViewState extends State<JogoDetailView> {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+              style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
             ),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
           ],

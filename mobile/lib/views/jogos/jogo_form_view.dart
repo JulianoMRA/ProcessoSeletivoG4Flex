@@ -227,8 +227,10 @@ class _JogoFormViewState extends State<JogoFormView> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: _data != null
-                                        ? AppColors.textPrimary
-                                        : AppColors.textHint,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Theme.of(context).hintColor,
                                   ),
                                 ),
                               ),
@@ -250,8 +252,10 @@ class _JogoFormViewState extends State<JogoFormView> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: _hora != null
-                                        ? AppColors.textPrimary
-                                        : AppColors.textHint,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Theme.of(context).hintColor,
                                   ),
                                 ),
                               ),
@@ -427,10 +431,10 @@ class _JogoFormViewState extends State<JogoFormView> {
         const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
