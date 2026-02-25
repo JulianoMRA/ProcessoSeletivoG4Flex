@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/torcedoresController');
+const validarUUID = require('../middleware/validarUUID');
+
+router.param('id', validarUUID);
 
 router.get('/', controller.listar);
 router.get('/verificar-cpf', controller.verificarCpf);

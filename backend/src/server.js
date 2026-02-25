@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const equipesRoutes = require('./routes/equipes');
@@ -10,9 +12,33 @@ const jogosRoutes = require('./routes/jogos');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Segurança
+app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
+// Forçar charset UTF-8 em todas as respostas JSON
+app.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+        res.set('Content-Type', 'application/json; charset=utf-8');
+        return originalJson(body);
+    };
+    next();
+});
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { erro: 'Muitas requisições, tente novamente em 15 minutos' },
+});
+app.use(limiter);
+
+
+// Rotas
 app.use('/api/equipes', equipesRoutes);
 app.use('/api/planos', planosRoutes);
 app.use('/api/torcedores', torcedoresRoutes);
@@ -38,6 +64,10 @@ app.get('/api/contadores', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`API rodando em http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`API rodando em http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;

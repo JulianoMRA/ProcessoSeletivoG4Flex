@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/jogosController');
+const validarUUID = require('../middleware/validarUUID');
+
+router.param('id', validarUUID);
 
 router.get('/', controller.listar);
 router.get('/:id', controller.buscarPorId);

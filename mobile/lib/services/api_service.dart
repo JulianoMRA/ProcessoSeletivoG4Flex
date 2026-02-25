@@ -49,8 +49,9 @@ class ApiService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/equipes'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(body),
+      encoding: utf8,
     );
 
     if (response.statusCode == 201) {
@@ -72,8 +73,9 @@ class ApiService {
 
     final response = await http.put(
       Uri.parse('$baseUrl/equipes/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(body),
+      encoding: utf8,
     );
 
     if (response.statusCode == 200) {
@@ -122,8 +124,9 @@ class ApiService {
   Future<Plano> createPlano(Plano plano) async {
     final response = await http.post(
       Uri.parse('$baseUrl/planos'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(plano.toJson()),
+      encoding: utf8,
     );
 
     if (response.statusCode == 201) {
@@ -135,8 +138,9 @@ class ApiService {
   Future<Plano> updatePlano(String id, Plano plano) async {
     final response = await http.put(
       Uri.parse('$baseUrl/planos/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode({'nome': plano.nome, 'valor': plano.valor}),
+      encoding: utf8,
     );
 
     if (response.statusCode == 200) {
@@ -174,8 +178,9 @@ class ApiService {
   Future<Torcedor> createTorcedor(Torcedor torcedor) async {
     final response = await http.post(
       Uri.parse('$baseUrl/torcedores'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(torcedor.toJson()),
+      encoding: utf8,
     );
 
     if (response.statusCode == 201) {
@@ -187,8 +192,9 @@ class ApiService {
   Future<Torcedor> updateTorcedor(String id, Torcedor torcedor) async {
     final response = await http.put(
       Uri.parse('$baseUrl/torcedores/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(torcedor.toJson()),
+      encoding: utf8,
     );
 
     if (response.statusCode == 200) {
@@ -240,8 +246,9 @@ class ApiService {
   Future<Jogo> createJogo(Jogo jogo) async {
     final response = await http.post(
       Uri.parse('$baseUrl/jogos'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(jogo.toJson()),
+      encoding: utf8,
     );
     if (response.statusCode == 201) {
       return Jogo.fromJson(json.decode(response.body));
@@ -252,8 +259,9 @@ class ApiService {
   Future<Jogo> updateJogo(String id, Jogo jogo) async {
     final response = await http.put(
       Uri.parse('$baseUrl/jogos/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
       body: json.encode(jogo.toJson()),
+      encoding: utf8,
     );
     if (response.statusCode == 200) {
       return Jogo.fromJson(json.decode(response.body));

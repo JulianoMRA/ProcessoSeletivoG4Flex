@@ -28,8 +28,8 @@ exports.listar = async (req, res) => {
         }
 
         if (page && limit) {
-            const pagina = Math.max(1, parseInt(page));
-            const limite = Math.min(100, Math.max(1, parseInt(limit)));
+            const pagina = Math.max(1, parseInt(page) || 1);
+            const limite = Math.min(100, Math.max(1, parseInt(limit) || 20));
             const offset = (pagina - 1) * limite;
 
             const countResult = await pool.query('SELECT COUNT(*) FROM jogos');
@@ -86,15 +86,25 @@ exports.criar = async (req, res) => {
             return res.status(400).json({ erro: 'Equipe A e Equipe B devem ser diferentes' });
         }
 
+        const golsA = parseInt(gols_equipe_a) || 0;
+        const golsB = parseInt(gols_equipe_b) || 0;
+
+        if (golsA < 0 || golsB < 0) {
+            return res.status(400).json({ erro: 'Gols não podem ser negativos' });
+        }
+
         const result = await pool.query(
             `INSERT INTO jogos (data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b)
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-            [data, hora, equipe_a_id, equipe_b_id, gols_equipe_a || 0, gols_equipe_b || 0]
+            [data, hora, equipe_a_id, equipe_b_id, golsA, golsB]
         );
 
         const jogo = await pool.query(`${queryBase} WHERE j.id = $1`, [result.rows[0].id]);
         res.status(201).json(jogo.rows[0]);
     } catch (err) {
+        if (err.code === '23503') {
+            return res.status(400).json({ erro: 'Equipe informada não existe' });
+        }
         res.status(500).json({ erro: 'Erro ao criar jogo' });
     }
 };
@@ -121,10 +131,17 @@ exports.atualizar = async (req, res) => {
             return res.status(400).json({ erro: 'Equipe A e Equipe B devem ser diferentes' });
         }
 
+        const golsA = parseInt(gols_equipe_a) || 0;
+        const golsB = parseInt(gols_equipe_b) || 0;
+
+        if (golsA < 0 || golsB < 0) {
+            return res.status(400).json({ erro: 'Gols não podem ser negativos' });
+        }
+
         const result = await pool.query(
             `UPDATE jogos SET data = $1, hora = $2, equipe_a_id = $3, equipe_b_id = $4,
              gols_equipe_a = $5, gols_equipe_b = $6 WHERE id = $7 RETURNING id`,
-            [data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b, id]
+            [data, hora, equipe_a_id, equipe_b_id, golsA, golsB, id]
         );
 
         if (result.rows.length === 0) {
@@ -134,6 +151,9 @@ exports.atualizar = async (req, res) => {
         const jogo = await pool.query(`${queryBase} WHERE j.id = $1`, [id]);
         res.json(jogo.rows[0]);
     } catch (err) {
+        if (err.code === '23503') {
+            return res.status(400).json({ erro: 'Equipe informada não existe' });
+        }
         res.status(500).json({ erro: 'Erro ao atualizar jogo' });
     }
 };

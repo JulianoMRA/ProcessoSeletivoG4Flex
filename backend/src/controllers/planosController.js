@@ -16,8 +16,8 @@ exports.listar = async (req, res) => {
         }
 
         if (page && limit) {
-            const pagina = Math.max(1, parseInt(page));
-            const limite = Math.min(100, Math.max(1, parseInt(limit)));
+            const pagina = Math.max(1, parseInt(page) || 1);
+            const limite = Math.min(100, Math.max(1, parseInt(limit) || 20));
             const offset = (pagina - 1) * limite;
 
             const countResult = await pool.query('SELECT COUNT(*) FROM planos');
@@ -67,16 +67,23 @@ exports.criar = async (req, res) => {
     try {
         const { nome, valor } = req.body;
 
-        if (!nome || !nome.trim()) {
+        const nomeTrimmed = (nome || '').trim();
+
+        if (!nomeTrimmed) {
             return res.status(400).json({ erro: 'Nome é obrigatório' });
         }
-        if (valor === undefined || valor === null || isNaN(valor) || valor < 0) {
-            return res.status(400).json({ erro: 'Valor inválido' });
+
+        const valorNum = parseFloat(valor);
+        if (isNaN(valorNum) || valorNum < 0) {
+            return res.status(400).json({ erro: 'Valor deve ser um número positivo' });
+        }
+        if (valorNum > 99999.99) {
+            return res.status(400).json({ erro: 'Valor não pode exceder R$ 99.999,99' });
         }
 
         const result = await pool.query(
             'INSERT INTO planos (nome, valor) VALUES ($1, $2) RETURNING *',
-            [nome, valor]
+            [nomeTrimmed, valorNum]
         );
 
         res.status(201).json(result.rows[0]);
@@ -90,16 +97,23 @@ exports.atualizar = async (req, res) => {
         const { id } = req.params;
         const { nome, valor } = req.body;
 
-        if (!nome || !nome.trim()) {
+        const nomeTrimmed = (nome || '').trim();
+
+        if (!nomeTrimmed) {
             return res.status(400).json({ erro: 'Nome é obrigatório' });
         }
-        if (valor === undefined || valor === null || isNaN(valor) || valor < 0) {
-            return res.status(400).json({ erro: 'Valor inválido' });
+
+        const valorNum = parseFloat(valor);
+        if (isNaN(valorNum) || valorNum < 0) {
+            return res.status(400).json({ erro: 'Valor deve ser um número positivo' });
+        }
+        if (valorNum > 99999.99) {
+            return res.status(400).json({ erro: 'Valor não pode exceder R$ 99.999,99' });
         }
 
         const result = await pool.query(
             'UPDATE planos SET nome = $1, valor = $2 WHERE id = $3 RETURNING *',
-            [nome, valor, id]
+            [nomeTrimmed, valorNum, id]
         );
 
         if (result.rows.length === 0) {
@@ -115,6 +129,15 @@ exports.atualizar = async (req, res) => {
 exports.excluir = async (req, res) => {
     try {
         const { id } = req.params;
+
+        const torcedores = await pool.query(
+            'SELECT COUNT(*) FROM torcedores WHERE plano_id = $1', [id]
+        );
+        if (parseInt(torcedores.rows[0].count) > 0) {
+            return res.status(409).json({
+                erro: 'Não é possível excluir: plano possui torcedores vinculados'
+            });
+        }
 
         const result = await pool.query(
             'DELETE FROM planos WHERE id = $1 RETURNING *', [id]
