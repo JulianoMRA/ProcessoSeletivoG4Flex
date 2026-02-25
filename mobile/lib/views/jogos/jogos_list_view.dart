@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/jogo_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/empty_state.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/models/equipe.dart';
@@ -444,34 +445,24 @@ class _JogosListViewState extends State<JogosListView> {
     final jogos = _jogosFiltrados;
 
     if (jogos.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.sports_score_rounded,
-                size: 48,
-                color: AppColors.textHint,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _controller.jogos.isEmpty
-                  ? 'Nenhum jogo cadastrado'
-                  : 'Nenhum jogo encontrado',
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+      return EmptyState(
+        icon: Icons.sports_score_rounded,
+        titulo: _controller.jogos.isEmpty
+            ? 'Nenhum jogo cadastrado'
+            : 'Nenhum jogo encontrado',
+        subtitulo: _controller.jogos.isEmpty
+            ? 'Registre o primeiro jogo para começar'
+            : 'Tente ajustar os filtros de busca',
+        botaoTexto: _controller.jogos.isEmpty ? 'Registrar jogo' : null,
+        onBotao: _controller.jogos.isEmpty
+            ? () async {
+                final criou = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const JogoFormView()),
+                );
+                if (criou == true) _controller.carregarJogos();
+              }
+            : null,
       );
     }
 

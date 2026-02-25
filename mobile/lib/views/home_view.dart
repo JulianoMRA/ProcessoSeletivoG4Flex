@@ -75,22 +75,25 @@ class _HomeViewState extends State<HomeView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-                  _buildHeader(),
-                  const Spacer(),
-                  _buildMenuCards(context),
-                  const Spacer(flex: 2),
-                ],
+      drawer: _buildDrawer(context),
+      body: Builder(
+        builder: (ctx) => SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SlideTransition(
+              position: _slideAnim,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildHeader(ctx),
+                    const Spacer(),
+                    _buildMenuCards(context),
+                    const Spacer(flex: 2),
+                  ],
+                ),
               ),
             ),
           ),
@@ -99,7 +102,196 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.sports_soccer_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Fala, Torcedor!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'v2.0.0',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildDrawerItem(
+            icon: Icons.shield_rounded,
+            label: 'Equipes',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const EquipesListView());
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.people_rounded,
+            label: 'Torcedores',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const TorcedoresListView());
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.sports_score_rounded,
+            label: 'Jogos',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const JogosListView());
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.card_membership_rounded,
+            label: 'Planos',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const PlanosListView());
+            },
+          ),
+          const Divider(),
+          _buildDrawerItem(
+            icon: Icons.info_outline_rounded,
+            label: 'Sobre',
+            onTap: () {
+              Navigator.pop(context);
+              _mostrarSobre(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      onTap: onTap,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+    );
+  }
+
+  void _navegarPara(BuildContext context, Widget pagina) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => pagina));
+    _carregarContadores();
+  }
+
+  void _mostrarSobre(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.sports_soccer_rounded,
+                color: AppColors.primary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Sobre', style: TextStyle(fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Fala, Torcedor! v2.0.0',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Aplicação CRUD para gerenciamento de equipes esportivas, planos de sócio-torcedor, torcedores e jogos.',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Processo Seletivo G4 Flex',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Desenvolvido com Flutter + Node.js + PostgreSQL',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext ctx) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -123,24 +315,44 @@ class _HomeViewState extends State<HomeView>
           ),
         ),
         const SizedBox(height: 24),
-        Text(
-          '${_saudacao()}!',
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Fala, Torcedor!',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -1,
-            height: 1.1,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${_saudacao()}!',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Fala, Torcedor!',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -1,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+              icon: const Icon(Icons.menu_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+                foregroundColor: AppColors.textPrimary,
+                padding: const EdgeInsets.all(12),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         const Text(

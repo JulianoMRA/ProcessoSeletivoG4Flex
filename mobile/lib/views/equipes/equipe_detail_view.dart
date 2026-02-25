@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/dialog.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/services/api_service.dart';
@@ -433,42 +434,26 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
     );
   }
 
-  void _confirmarExclusao(BuildContext context) {
-    showDialog(
+  void _confirmarExclusao(BuildContext context) async {
+    final confirmou = await AppDialog.confirmar(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir equipe'),
-        content: Text(
+      titulo: 'Excluir equipe',
+      mensagem:
           'Todos os torcedores e planos de "${_equipe.nome}" serão excluídos. Deseja continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final controller = EquipeController();
-              final sucesso = await controller.excluirEquipe(_equipe.id!);
-
-              if (context.mounted) {
-                if (sucesso) {
-                  AppSnackBar.sucesso(context, 'Equipe excluída');
-                  Navigator.pop(context, true);
-                } else {
-                  AppSnackBar.erro(
-                    context,
-                    controller.erro ?? 'Erro ao excluir',
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
     );
+
+    if (!confirmou || !context.mounted) return;
+
+    final controller = EquipeController();
+    final sucesso = await controller.excluirEquipe(_equipe.id!);
+
+    if (context.mounted) {
+      if (sucesso) {
+        AppSnackBar.sucesso(context, 'Equipe excluída');
+        Navigator.pop(context, true);
+      } else {
+        AppSnackBar.erro(context, controller.erro ?? 'Erro ao excluir');
+      }
+    }
   }
 }

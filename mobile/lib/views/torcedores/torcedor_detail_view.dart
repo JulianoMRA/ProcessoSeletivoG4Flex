@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/torcedor_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/dialog.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/views/torcedores/torcedor_form_view.dart';
@@ -157,54 +158,39 @@ class TorcedorDetailView extends StatelessWidget {
     );
   }
 
-  void _confirmarExclusao(BuildContext context) {
-    showDialog(
+  void _confirmarExclusao(BuildContext context) async {
+    final confirmou = await AppDialog.confirmar(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir torcedor'),
-        content: Text('Deseja excluir "${torcedor.nome}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final controller = TorcedorController();
-              final torcedorExcluido = torcedor;
-              final sucesso = await controller.excluirTorcedor(torcedor.id!);
-
-              if (context.mounted) {
-                if (sucesso) {
-                  AppSnackBar.sucesso(
-                    context,
-                    'Torcedor excluído',
-                    action: SnackBarAction(
-                      label: 'Desfazer',
-                      textColor: Colors.white,
-                      onPressed: () async {
-                        try {
-                          await controller.criarTorcedor(torcedorExcluido);
-                        } catch (_) {}
-                      },
-                    ),
-                  );
-                  Navigator.pop(context, true);
-                } else {
-                  AppSnackBar.erro(
-                    context,
-                    controller.erro ?? 'Erro ao excluir',
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+      titulo: 'Excluir torcedor',
+      mensagem: 'Deseja excluir "${torcedor.nome}"?',
     );
+
+    if (!confirmou || !context.mounted) return;
+
+    final controller = TorcedorController();
+    final torcedorExcluido = torcedor;
+    final sucesso = await controller.excluirTorcedor(torcedor.id!);
+
+    if (context.mounted) {
+      if (sucesso) {
+        AppSnackBar.sucesso(
+          context,
+          'Torcedor excluído',
+          action: SnackBarAction(
+            label: 'Desfazer',
+            textColor: Colors.white,
+            onPressed: () async {
+              try {
+                await controller.criarTorcedor(torcedorExcluido);
+              } catch (_) {}
+            },
+          ),
+        );
+        Navigator.pop(context, true);
+      } else {
+        AppSnackBar.erro(context, controller.erro ?? 'Erro ao excluir');
+      }
+    }
   }
 }
 

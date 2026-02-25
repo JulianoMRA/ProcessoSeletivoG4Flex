@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/equipe_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/empty_state.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
@@ -474,34 +475,24 @@ class _EquipesListViewState extends State<EquipesListView> {
     final lista = _equipesFiltradas;
 
     if (lista.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.shield_outlined,
-                size: 48,
-                color: AppColors.textHint,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _controller.equipes.isEmpty
-                  ? 'Nenhuma equipe cadastrada'
-                  : 'Nenhuma equipe encontrada',
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+      return EmptyState(
+        icon: Icons.shield_outlined,
+        titulo: _controller.equipes.isEmpty
+            ? 'Nenhuma equipe cadastrada'
+            : 'Nenhuma equipe encontrada',
+        subtitulo: _controller.equipes.isEmpty
+            ? 'Cadastre a primeira equipe para começar'
+            : 'Tente ajustar os filtros de busca',
+        botaoTexto: _controller.equipes.isEmpty ? 'Cadastrar equipe' : null,
+        onBotao: _controller.equipes.isEmpty
+            ? () async {
+                final criou = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EquipeFormView()),
+                );
+                if (criou == true) _controller.carregarEquipes();
+              }
+            : null,
       );
     }
 

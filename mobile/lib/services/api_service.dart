@@ -12,6 +12,15 @@ class ApiService {
     return 'http://10.0.2.2:3000/api';
   }
 
+  String _extrairErro(http.Response response, String fallback) {
+    try {
+      final body = json.decode(response.body);
+      return body['erro'] ?? fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
   // EQUIPES
 
   Future<List<Equipe>> getEquipes() async {
@@ -20,7 +29,7 @@ class ApiService {
       final List data = json.decode(response.body);
       return data.map((json) => Equipe.fromJson(json)).toList();
     }
-    throw Exception('Erro ao carregar equipes');
+    throw Exception(_extrairErro(response, 'Erro ao carregar equipes'));
   }
 
   Future<Equipe> getEquipeById(String id) async {
@@ -28,7 +37,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return Equipe.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao buscar equipe');
+    throw Exception(_extrairErro(response, 'Erro ao buscar equipe'));
   }
 
   Future<Equipe> createEquipe(Equipe equipe, List<String> planoIds) async {
@@ -47,7 +56,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return Equipe.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao criar equipe');
+    throw Exception(_extrairErro(response, 'Erro ao criar equipe'));
   }
 
   Future<Equipe> updateEquipe(
@@ -70,13 +79,13 @@ class ApiService {
     if (response.statusCode == 200) {
       return Equipe.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao atualizar equipe');
+    throw Exception(_extrairErro(response, 'Erro ao atualizar equipe'));
   }
 
   Future<void> deleteEquipe(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/equipes/$id'));
     if (response.statusCode != 200) {
-      throw Exception('Erro ao excluir equipe');
+      throw Exception(_extrairErro(response, 'Erro ao excluir equipe'));
     }
   }
 
@@ -88,7 +97,7 @@ class ApiService {
       final List data = json.decode(response.body);
       return data.map((json) => Plano.fromJson(json)).toList();
     }
-    throw Exception('Erro ao carregar planos');
+    throw Exception(_extrairErro(response, 'Erro ao carregar planos'));
   }
 
   Future<List<Plano>> getPlanosByEquipe(String equipeId) async {
@@ -99,7 +108,7 @@ class ApiService {
       final List data = json.decode(response.body);
       return data.map((json) => Plano.fromJson(json)).toList();
     }
-    throw Exception('Erro ao carregar planos');
+    throw Exception(_extrairErro(response, 'Erro ao carregar planos'));
   }
 
   Future<Plano> getPlanoById(String id) async {
@@ -107,7 +116,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return Plano.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao buscar plano');
+    throw Exception(_extrairErro(response, 'Erro ao buscar plano'));
   }
 
   Future<Plano> createPlano(Plano plano) async {
@@ -120,7 +129,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return Plano.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao criar plano');
+    throw Exception(_extrairErro(response, 'Erro ao criar plano'));
   }
 
   Future<Plano> updatePlano(String id, Plano plano) async {
@@ -133,13 +142,13 @@ class ApiService {
     if (response.statusCode == 200) {
       return Plano.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao atualizar plano');
+    throw Exception(_extrairErro(response, 'Erro ao atualizar plano'));
   }
 
   Future<void> deletePlano(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/planos/$id'));
     if (response.statusCode != 200) {
-      throw Exception('Erro ao excluir plano');
+      throw Exception(_extrairErro(response, 'Erro ao excluir plano'));
     }
   }
 
@@ -151,7 +160,7 @@ class ApiService {
       final List data = json.decode(response.body);
       return data.map((json) => Torcedor.fromJson(json)).toList();
     }
-    throw Exception('Erro ao carregar torcedores');
+    throw Exception(_extrairErro(response, 'Erro ao carregar torcedores'));
   }
 
   Future<Torcedor> getTorcedorById(String id) async {
@@ -159,7 +168,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return Torcedor.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao buscar torcedor');
+    throw Exception(_extrairErro(response, 'Erro ao buscar torcedor'));
   }
 
   Future<Torcedor> createTorcedor(Torcedor torcedor) async {
@@ -171,10 +180,8 @@ class ApiService {
 
     if (response.statusCode == 201) {
       return Torcedor.fromJson(json.decode(response.body));
-    } else if (response.statusCode == 409) {
-      throw Exception('CPF já cadastrado');
     }
-    throw Exception('Erro ao criar torcedor');
+    throw Exception(_extrairErro(response, 'Erro ao criar torcedor'));
   }
 
   Future<Torcedor> updateTorcedor(String id, Torcedor torcedor) async {
@@ -186,16 +193,14 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return Torcedor.fromJson(json.decode(response.body));
-    } else if (response.statusCode == 409) {
-      throw Exception('CPF já cadastrado');
     }
-    throw Exception('Erro ao atualizar torcedor');
+    throw Exception(_extrairErro(response, 'Erro ao atualizar torcedor'));
   }
 
   Future<void> deleteTorcedor(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/torcedores/$id'));
     if (response.statusCode != 200) {
-      throw Exception('Erro ao excluir torcedor');
+      throw Exception(_extrairErro(response, 'Erro ao excluir torcedor'));
     }
   }
 
@@ -221,7 +226,7 @@ class ApiService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((j) => Jogo.fromJson(j)).toList();
     }
-    throw Exception('Erro ao carregar jogos');
+    throw Exception(_extrairErro(response, 'Erro ao carregar jogos'));
   }
 
   Future<Jogo> getJogoById(String id) async {
@@ -229,7 +234,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return Jogo.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao carregar jogo');
+    throw Exception(_extrairErro(response, 'Erro ao carregar jogo'));
   }
 
   Future<Jogo> createJogo(Jogo jogo) async {
@@ -241,7 +246,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return Jogo.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao criar jogo');
+    throw Exception(_extrairErro(response, 'Erro ao criar jogo'));
   }
 
   Future<Jogo> updateJogo(String id, Jogo jogo) async {
@@ -253,13 +258,13 @@ class ApiService {
     if (response.statusCode == 200) {
       return Jogo.fromJson(json.decode(response.body));
     }
-    throw Exception('Erro ao atualizar jogo');
+    throw Exception(_extrairErro(response, 'Erro ao atualizar jogo'));
   }
 
   Future<void> deleteJogo(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/jogos/$id'));
     if (response.statusCode != 200) {
-      throw Exception('Erro ao excluir jogo');
+      throw Exception(_extrairErro(response, 'Erro ao excluir jogo'));
     }
   }
 }

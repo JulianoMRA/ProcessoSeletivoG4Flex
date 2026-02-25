@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/controllers/plano_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
+import 'package:fala_torcedor/core/empty_state.dart';
 import 'package:fala_torcedor/core/staggered_list_item.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/views/planos/plano_detail_view.dart';
@@ -315,34 +316,24 @@ class _PlanosListViewState extends State<PlanosListView> {
     final planos = _planosFiltrados;
 
     if (planos.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.card_membership_outlined,
-                size: 48,
-                color: AppColors.textHint,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _controller.planos.isEmpty
-                  ? 'Nenhum plano cadastrado'
-                  : 'Nenhum plano encontrado',
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
+      return EmptyState(
+        icon: Icons.card_membership_outlined,
+        titulo: _controller.planos.isEmpty
+            ? 'Nenhum plano cadastrado'
+            : 'Nenhum plano encontrado',
+        subtitulo: _controller.planos.isEmpty
+            ? 'Cadastre o primeiro plano para começar'
+            : 'Tente ajustar os filtros de busca',
+        botaoTexto: _controller.planos.isEmpty ? 'Cadastrar plano' : null,
+        onBotao: _controller.planos.isEmpty
+            ? () async {
+                final criou = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PlanoFormView()),
+                );
+                if (criou == true) _controller.carregarPlanos();
+              }
+            : null,
       );
     }
 
