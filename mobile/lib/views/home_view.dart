@@ -142,14 +142,6 @@ class _HomeViewState extends State<HomeView>
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'v2.0.0',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 13,
-                  ),
-                ),
               ],
             ),
           ),
@@ -270,7 +262,7 @@ class _HomeViewState extends State<HomeView>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Fala, Torcedor! v2.0.0',
+              'Fala, Torcedor!',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -317,54 +309,8 @@ class _HomeViewState extends State<HomeView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: 0.1),
-                AppColors.secondary.withValues(alpha: 0.05),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.sports_soccer_rounded,
-            size: 48,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 24),
         Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${_saudacao()}!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Fala, Torcedor!',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(ctx).colorScheme.onSurface,
-                      letterSpacing: -1,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             IconButton(
               onPressed: () => Scaffold.of(ctx).openDrawer(),
               icon: const Icon(Icons.menu_rounded),
@@ -372,6 +318,32 @@ class _HomeViewState extends State<HomeView>
                 backgroundColor: Theme.of(ctx).colorScheme.outlineVariant,
                 foregroundColor: Theme.of(ctx).colorScheme.onSurface,
                 padding: const EdgeInsets.all(12),
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${_saudacao()}!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Fala, Torcedor!',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: Theme.of(ctx).colorScheme.onSurface,
+                letterSpacing: -1,
+                height: 1.1,
               ),
             ),
           ],
