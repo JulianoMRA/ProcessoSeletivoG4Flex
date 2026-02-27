@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+const SERIES_VALIDAS = ['Série A', 'Série B', 'Série C', 'Série D'];
+const MAX_NOME = 200;
+
 exports.listar = async (req, res) => {
     try {
         const { page, limit } = req.query;
@@ -25,6 +28,7 @@ exports.listar = async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
+        console.error('Erro ao listar equipes:', err.message);
         res.status(500).json({ erro: 'Erro ao listar equipes' });
     }
 };
@@ -50,28 +54,35 @@ exports.buscarPorId = async (req, res) => {
 
         res.json({ ...equipe.rows[0], planos: planos.rows });
     } catch (err) {
+        console.error('Erro ao buscar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar equipe' });
     }
 };
 
 exports.criar = async (req, res) => {
+    const { nome, serie, plano_ids } = req.body;
+
+    const nomeTrimmed = (nome || '').trim();
+    const serieTrimmed = (serie || '').trim();
+
+    if (!nomeTrimmed) {
+        return res.status(400).json({ erro: 'Nome é obrigatório' });
+    }
+    if (nomeTrimmed.length > MAX_NOME) {
+        return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
+    }
+    if (!serieTrimmed) {
+        return res.status(400).json({ erro: 'Série é obrigatória' });
+    }
+    if (!SERIES_VALIDAS.includes(serieTrimmed)) {
+        return res.status(400).json({ erro: `Série inválida. Valores aceitos: ${SERIES_VALIDAS.join(', ')}` });
+    }
+    if (!Array.isArray(plano_ids) || plano_ids.length === 0) {
+        return res.status(400).json({ erro: 'Selecione pelo menos um plano' });
+    }
+
     const client = await pool.connect();
     try {
-        const { nome, serie, plano_ids } = req.body;
-
-        const nomeTrimmed = (nome || '').trim();
-        const serieTrimmed = (serie || '').trim();
-
-        if (!nomeTrimmed) {
-            return res.status(400).json({ erro: 'Nome é obrigatório' });
-        }
-        if (!serieTrimmed) {
-            return res.status(400).json({ erro: 'Série é obrigatória' });
-        }
-        if (!plano_ids || plano_ids.length === 0) {
-            return res.status(400).json({ erro: 'Selecione pelo menos um plano' });
-        }
-
         await client.query('BEGIN');
 
         const equipe = await client.query(
@@ -100,6 +111,10 @@ exports.criar = async (req, res) => {
         res.status(201).json({ ...equipe.rows[0], planos: planos.rows });
     } catch (err) {
         await client.query('ROLLBACK');
+        if (err.code === '23503') {
+            return res.status(400).json({ erro: 'Plano informado não existe' });
+        }
+        console.error('Erro ao criar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao criar equipe' });
     } finally {
         client.release();
@@ -107,21 +122,27 @@ exports.criar = async (req, res) => {
 };
 
 exports.atualizar = async (req, res) => {
+    const { id } = req.params;
+    const { nome, serie, plano_ids } = req.body;
+
+    const nomeTrimmed = (nome || '').trim();
+    const serieTrimmed = (serie || '').trim();
+
+    if (!nomeTrimmed) {
+        return res.status(400).json({ erro: 'Nome é obrigatório' });
+    }
+    if (nomeTrimmed.length > MAX_NOME) {
+        return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
+    }
+    if (!serieTrimmed) {
+        return res.status(400).json({ erro: 'Série é obrigatória' });
+    }
+    if (!SERIES_VALIDAS.includes(serieTrimmed)) {
+        return res.status(400).json({ erro: `Série inválida. Valores aceitos: ${SERIES_VALIDAS.join(', ')}` });
+    }
+
     const client = await pool.connect();
     try {
-        const { id } = req.params;
-        const { nome, serie, plano_ids } = req.body;
-
-        const nomeTrimmed = (nome || '').trim();
-        const serieTrimmed = (serie || '').trim();
-
-        if (!nomeTrimmed) {
-            return res.status(400).json({ erro: 'Nome é obrigatório' });
-        }
-        if (!serieTrimmed) {
-            return res.status(400).json({ erro: 'Série é obrigatória' });
-        }
-
         await client.query('BEGIN');
 
         const resultado = await client.query(
@@ -134,7 +155,7 @@ exports.atualizar = async (req, res) => {
             return res.status(404).json({ erro: 'Equipe não encontrada' });
         }
 
-        if (plano_ids) {
+        if (Array.isArray(plano_ids)) {
             await client.query('DELETE FROM equipe_planos WHERE equipe_id = $1', [id]);
 
             for (const planoId of plano_ids) {
@@ -157,6 +178,10 @@ exports.atualizar = async (req, res) => {
         res.json({ ...resultado.rows[0], planos: planos.rows });
     } catch (err) {
         await client.query('ROLLBACK');
+        if (err.code === '23503') {
+            return res.status(400).json({ erro: 'Plano informado não existe' });
+        }
+        console.error('Erro ao atualizar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao atualizar equipe' });
     } finally {
         client.release();
@@ -193,8 +218,9 @@ exports.excluir = async (req, res) => {
             return res.status(404).json({ erro: 'Equipe não encontrada' });
         }
 
-        res.json({ mensagem: 'Equipe excluída com sucesso' });
+        res.json({ mensagem: 'Equipe excluída com sucesso', id });
     } catch (err) {
+        console.error('Erro ao excluir equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao excluir equipe' });
     }
 };

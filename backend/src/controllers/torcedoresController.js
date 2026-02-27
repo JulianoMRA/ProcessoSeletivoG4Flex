@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+const MAX_NOME = 200;
+const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
 exports.listar = async (req, res) => {
     try {
         const { page, limit } = req.query;
@@ -31,6 +34,7 @@ exports.listar = async (req, res) => {
         const result = await pool.query(`${baseQuery} ORDER BY t.nome`);
         res.json(result.rows);
     } catch (err) {
+        console.error('Erro ao listar torcedores:', err.message);
         res.status(500).json({ erro: 'Erro ao listar torcedores' });
     }
 };
@@ -55,34 +59,38 @@ exports.buscarPorId = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao buscar torcedor:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar torcedor' });
     }
 };
 
 exports.criar = async (req, res) => {
+    const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
+
+    const nomeTrimmed = (nome || '').trim();
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+
+    if (!nomeTrimmed) {
+        return res.status(400).json({ erro: 'Nome é obrigatório' });
+    }
+    if (nomeTrimmed.length > MAX_NOME) {
+        return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
+    }
+    if (!cpfLimpo || cpfLimpo.length !== 11) {
+        return res.status(400).json({ erro: 'CPF deve conter 11 dígitos' });
+    }
+    if (!nascimento || !DATA_REGEX.test(nascimento)) {
+        return res.status(400).json({ erro: 'Data de nascimento é obrigatória (formato: YYYY-MM-DD)' });
+    }
+    if (!equipe_id) {
+        return res.status(400).json({ erro: 'Equipe é obrigatória' });
+    }
+    if (!plano_id) {
+        return res.status(400).json({ erro: 'Plano é obrigatório' });
+    }
+
     const client = await pool.connect();
     try {
-        const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
-
-        const nomeTrimmed = (nome || '').trim();
-        const cpfLimpo = (cpf || '').replace(/\D/g, '');
-
-        if (!nomeTrimmed) {
-            return res.status(400).json({ erro: 'Nome é obrigatório' });
-        }
-        if (!cpfLimpo || cpfLimpo.length !== 11) {
-            return res.status(400).json({ erro: 'CPF deve conter 11 dígitos' });
-        }
-        if (!nascimento) {
-            return res.status(400).json({ erro: 'Data de nascimento é obrigatória' });
-        }
-        if (!equipe_id) {
-            return res.status(400).json({ erro: 'Equipe é obrigatória' });
-        }
-        if (!plano_id) {
-            return res.status(400).json({ erro: 'Plano é obrigatório' });
-        }
-
         await client.query('BEGIN');
 
         const result = await client.query(
@@ -106,6 +114,7 @@ exports.criar = async (req, res) => {
         if (err.code === '23503') {
             return res.status(400).json({ erro: 'Equipe ou plano informado não existe' });
         }
+        console.error('Erro ao criar torcedor:', err.message);
         res.status(500).json({ erro: 'Erro ao criar torcedor' });
     } finally {
         client.release();
@@ -113,30 +122,33 @@ exports.criar = async (req, res) => {
 };
 
 exports.atualizar = async (req, res) => {
+    const { id } = req.params;
+    const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
+
+    const nomeTrimmed = (nome || '').trim();
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+
+    if (!nomeTrimmed) {
+        return res.status(400).json({ erro: 'Nome é obrigatório' });
+    }
+    if (nomeTrimmed.length > MAX_NOME) {
+        return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
+    }
+    if (!cpfLimpo || cpfLimpo.length !== 11) {
+        return res.status(400).json({ erro: 'CPF deve conter 11 dígitos' });
+    }
+    if (!nascimento || !DATA_REGEX.test(nascimento)) {
+        return res.status(400).json({ erro: 'Data de nascimento é obrigatória (formato: YYYY-MM-DD)' });
+    }
+    if (!equipe_id) {
+        return res.status(400).json({ erro: 'Equipe é obrigatória' });
+    }
+    if (!plano_id) {
+        return res.status(400).json({ erro: 'Plano é obrigatório' });
+    }
+
     const client = await pool.connect();
     try {
-        const { id } = req.params;
-        const { nome, cpf, nascimento, equipe_id, plano_id } = req.body;
-
-        const nomeTrimmed = (nome || '').trim();
-        const cpfLimpo = (cpf || '').replace(/\D/g, '');
-
-        if (!nomeTrimmed) {
-            return res.status(400).json({ erro: 'Nome é obrigatório' });
-        }
-        if (!cpfLimpo || cpfLimpo.length !== 11) {
-            return res.status(400).json({ erro: 'CPF deve conter 11 dígitos' });
-        }
-        if (!nascimento) {
-            return res.status(400).json({ erro: 'Data de nascimento é obrigatória' });
-        }
-        if (!equipe_id) {
-            return res.status(400).json({ erro: 'Equipe é obrigatória' });
-        }
-        if (!plano_id) {
-            return res.status(400).json({ erro: 'Plano é obrigatório' });
-        }
-
         await client.query('BEGIN');
 
         const anterior = await client.query(
@@ -177,6 +189,7 @@ exports.atualizar = async (req, res) => {
         if (err.code === '23503') {
             return res.status(400).json({ erro: 'Equipe ou plano informado não existe' });
         }
+        console.error('Erro ao atualizar torcedor:', err.message);
         res.status(500).json({ erro: 'Erro ao atualizar torcedor' });
     } finally {
         client.release();
@@ -207,9 +220,10 @@ exports.excluir = async (req, res) => {
 
         await client.query('COMMIT');
 
-        res.json({ mensagem: 'Torcedor excluído com sucesso' });
+        res.json({ mensagem: 'Torcedor excluído com sucesso', id });
     } catch (err) {
         await client.query('ROLLBACK');
+        console.error('Erro ao excluir torcedor:', err.message);
         res.status(500).json({ erro: 'Erro ao excluir torcedor' });
     } finally {
         client.release();
@@ -233,6 +247,7 @@ exports.verificarCpf = async (req, res) => {
         const result = await pool.query(query, params);
         res.json({ existe: result.rows.length > 0 });
     } catch (err) {
+        console.error('Erro ao verificar CPF:', err.message);
         res.status(500).json({ erro: 'Erro ao verificar CPF' });
     }
 };

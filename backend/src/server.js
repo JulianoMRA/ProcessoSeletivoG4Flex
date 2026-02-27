@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+const pool = require('./config/database');
+
 const equipesRoutes = require('./routes/equipes');
 const planosRoutes = require('./routes/planos');
 const torcedoresRoutes = require('./routes/torcedores');
@@ -50,7 +52,6 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/contadores', async (req, res) => {
     try {
-        const pool = require('./config/database');
         const result = await pool.query(`
             SELECT
                 (SELECT COUNT(*) FROM equipes) AS equipes,
@@ -60,8 +61,15 @@ app.get('/api/contadores', async (req, res) => {
         `);
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao buscar contadores:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar contadores' });
     }
+});
+
+// Middleware global de tratamento de erros
+app.use((err, req, res, _next) => {
+    console.error('Erro não tratado:', err.message);
+    res.status(500).json({ erro: 'Erro interno do servidor' });
 });
 
 if (process.env.NODE_ENV !== 'test') {
@@ -71,3 +79,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
+

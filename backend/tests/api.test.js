@@ -170,6 +170,20 @@ describe('PLANOS', () => {
                 .send({ nome: 'X', valor: 10 });
             expect(res.statusCode).toBe(404);
         });
+
+        it('deve rejeitar valor negativo no update', async () => {
+            const res = await request(app)
+                .put(`/api/planos/${criados.planos[0]}`)
+                .send({ nome: 'X', valor: -5 });
+            expect(res.statusCode).toBe(400);
+        });
+
+        it('deve rejeitar nome vazio no update', async () => {
+            const res = await request(app)
+                .put(`/api/planos/${criados.planos[0]}`)
+                .send({ nome: '', valor: 10 });
+            expect(res.statusCode).toBe(400);
+        });
     });
 });
 
@@ -294,6 +308,30 @@ describe('EQUIPES', () => {
                 });
             expect(res.statusCode).toBe(200);
             expect(res.body.nome).toBe('Equipe A Atualizada');
+        });
+
+        it('deve rejeitar série inválida no update', async () => {
+            const res = await request(app)
+                .put(`/api/equipes/${criados.equipes[0]}`)
+                .send({
+                    nome: 'Teste',
+                    serie: 'Série Z',
+                    plano_ids: [criados.planos[0]],
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('inválida');
+        });
+
+        it('deve rejeitar plano inexistente no update', async () => {
+            const res = await request(app)
+                .put(`/api/equipes/${criados.equipes[0]}`)
+                .send({
+                    nome: 'Teste',
+                    serie: 'Série A',
+                    plano_ids: ['00000000-0000-0000-0000-000000000000'],
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('não existe');
         });
     });
 });
@@ -477,6 +515,34 @@ describe('TORCEDORES', () => {
                 });
             expect(res.statusCode).toBe(404);
         });
+
+        it('deve rejeitar CPF duplicado no update', async () => {
+            const res = await request(app)
+                .put(`/api/torcedores/${criados.torcedores[0]}`)
+                .send({
+                    nome: 'Teste',
+                    cpf: '44444444444',
+                    nascimento: '1990-01-01',
+                    equipe_id: criados.equipes[0],
+                    plano_id: criados.planos[0],
+                });
+            expect(res.statusCode).toBe(409);
+            expect(res.body.erro).toContain('CPF');
+        });
+
+        it('deve rejeitar data inválida no update', async () => {
+            const res = await request(app)
+                .put(`/api/torcedores/${criados.torcedores[0]}`)
+                .send({
+                    nome: 'Teste',
+                    cpf: '11111111111',
+                    nascimento: 'abc',
+                    equipe_id: criados.equipes[0],
+                    plano_id: criados.planos[0],
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('formato');
+        });
     });
 });
 
@@ -602,6 +668,51 @@ describe('JOGOS', () => {
                 });
             expect(res.statusCode).toBe(200);
             expect(res.body.gols_equipe_a).toBe(3);
+        });
+
+        it('deve rejeitar gols negativos no update', async () => {
+            const res = await request(app)
+                .put(`/api/jogos/${criados.jogos[0]}`)
+                .send({
+                    data: '2025-06-15',
+                    hora: '18:00',
+                    equipe_a_id: criados.equipes[0],
+                    equipe_b_id: criados.equipes[1],
+                    gols_equipe_a: -1,
+                    gols_equipe_b: 0,
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('negativos');
+        });
+
+        it('deve rejeitar mesma equipe no update', async () => {
+            const res = await request(app)
+                .put(`/api/jogos/${criados.jogos[0]}`)
+                .send({
+                    data: '2025-06-15',
+                    hora: '18:00',
+                    equipe_a_id: criados.equipes[0],
+                    equipe_b_id: criados.equipes[0],
+                    gols_equipe_a: 0,
+                    gols_equipe_b: 0,
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('diferentes');
+        });
+
+        it('deve rejeitar data inválida no update', async () => {
+            const res = await request(app)
+                .put(`/api/jogos/${criados.jogos[0]}`)
+                .send({
+                    data: 'abc',
+                    hora: '18:00',
+                    equipe_a_id: criados.equipes[0],
+                    equipe_b_id: criados.equipes[1],
+                    gols_equipe_a: 0,
+                    gols_equipe_b: 0,
+                });
+            expect(res.statusCode).toBe(400);
+            expect(res.body.erro).toContain('formato');
         });
     });
 });

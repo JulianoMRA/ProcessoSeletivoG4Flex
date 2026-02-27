@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+const DATA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const HORA_REGEX = /^\d{2}:\d{2}$/;
+
 const queryBase = `
     SELECT j.id, j.data, j.hora,
         j.equipe_a_id, ea.nome AS equipe_a_nome,
@@ -46,6 +49,7 @@ exports.listar = async (req, res) => {
         const result = await pool.query(`${queryBase} ORDER BY j.data DESC, j.hora DESC`);
         res.json(result.rows);
     } catch (err) {
+        console.error('Erro ao listar jogos:', err.message);
         res.status(500).json({ erro: 'Erro ao listar jogos' });
     }
 };
@@ -61,6 +65,7 @@ exports.buscarPorId = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao buscar jogo:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar jogo' });
     }
 };
@@ -69,11 +74,11 @@ exports.criar = async (req, res) => {
     try {
         const { data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b } = req.body;
 
-        if (!data) {
-            return res.status(400).json({ erro: 'Data é obrigatória' });
+        if (!data || !DATA_REGEX.test(data)) {
+            return res.status(400).json({ erro: 'Data é obrigatória (formato: YYYY-MM-DD)' });
         }
-        if (!hora) {
-            return res.status(400).json({ erro: 'Hora é obrigatória' });
+        if (!hora || !HORA_REGEX.test(hora)) {
+            return res.status(400).json({ erro: 'Hora é obrigatória (formato: HH:MM)' });
         }
         if (!equipe_a_id) {
             return res.status(400).json({ erro: 'Equipe A é obrigatória' });
@@ -105,6 +110,7 @@ exports.criar = async (req, res) => {
         if (err.code === '23503') {
             return res.status(400).json({ erro: 'Equipe informada não existe' });
         }
+        console.error('Erro ao criar jogo:', err.message);
         res.status(500).json({ erro: 'Erro ao criar jogo' });
     }
 };
@@ -114,11 +120,11 @@ exports.atualizar = async (req, res) => {
         const { id } = req.params;
         const { data, hora, equipe_a_id, equipe_b_id, gols_equipe_a, gols_equipe_b } = req.body;
 
-        if (!data) {
-            return res.status(400).json({ erro: 'Data é obrigatória' });
+        if (!data || !DATA_REGEX.test(data)) {
+            return res.status(400).json({ erro: 'Data é obrigatória (formato: YYYY-MM-DD)' });
         }
-        if (!hora) {
-            return res.status(400).json({ erro: 'Hora é obrigatória' });
+        if (!hora || !HORA_REGEX.test(hora)) {
+            return res.status(400).json({ erro: 'Hora é obrigatória (formato: HH:MM)' });
         }
         if (!equipe_a_id) {
             return res.status(400).json({ erro: 'Equipe A é obrigatória' });
@@ -154,6 +160,7 @@ exports.atualizar = async (req, res) => {
         if (err.code === '23503') {
             return res.status(400).json({ erro: 'Equipe informada não existe' });
         }
+        console.error('Erro ao atualizar jogo:', err.message);
         res.status(500).json({ erro: 'Erro ao atualizar jogo' });
     }
 };
@@ -167,8 +174,9 @@ exports.excluir = async (req, res) => {
             return res.status(404).json({ erro: 'Jogo não encontrado' });
         }
 
-        res.json({ mensagem: 'Jogo excluído com sucesso' });
+        res.json({ mensagem: 'Jogo excluído com sucesso', id });
     } catch (err) {
+        console.error('Erro ao excluir jogo:', err.message);
         res.status(500).json({ erro: 'Erro ao excluir jogo' });
     }
 };

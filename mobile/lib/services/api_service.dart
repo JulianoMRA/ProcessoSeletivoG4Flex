@@ -14,7 +14,7 @@ class ApiService {
 
   String _extrairErro(http.Response response, String fallback) {
     try {
-      final body = json.decode(response.body);
+      final body = json.decode(utf8.decode(response.bodyBytes));
       return body['erro'] ?? fallback;
     } catch (_) {
       return fallback;

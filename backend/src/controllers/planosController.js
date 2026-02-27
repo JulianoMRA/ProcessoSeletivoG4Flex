@@ -1,5 +1,7 @@
 const pool = require('../config/database');
 
+const MAX_NOME = 200;
+
 exports.listar = async (req, res) => {
     try {
         const { equipe_id, page, limit } = req.query;
@@ -34,6 +36,7 @@ exports.listar = async (req, res) => {
         const result = await pool.query('SELECT * FROM planos ORDER BY nome, valor');
         res.json(result.rows);
     } catch (err) {
+        console.error('Erro ao listar planos:', err.message);
         res.status(500).json({ erro: 'Erro ao listar planos' });
     }
 };
@@ -59,6 +62,7 @@ exports.buscarPorId = async (req, res) => {
 
         res.json({ ...result.rows[0], equipes: equipes.rows });
     } catch (err) {
+        console.error('Erro ao buscar plano:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar plano' });
     }
 };
@@ -71,6 +75,9 @@ exports.criar = async (req, res) => {
 
         if (!nomeTrimmed) {
             return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (nomeTrimmed.length > MAX_NOME) {
+            return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
         }
 
         const valorNum = parseFloat(valor);
@@ -88,6 +95,7 @@ exports.criar = async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao criar plano:', err.message);
         res.status(500).json({ erro: 'Erro ao criar plano' });
     }
 };
@@ -101,6 +109,9 @@ exports.atualizar = async (req, res) => {
 
         if (!nomeTrimmed) {
             return res.status(400).json({ erro: 'Nome é obrigatório' });
+        }
+        if (nomeTrimmed.length > MAX_NOME) {
+            return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
         }
 
         const valorNum = parseFloat(valor);
@@ -122,6 +133,7 @@ exports.atualizar = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (err) {
+        console.error('Erro ao atualizar plano:', err.message);
         res.status(500).json({ erro: 'Erro ao atualizar plano' });
     }
 };
@@ -147,8 +159,9 @@ exports.excluir = async (req, res) => {
             return res.status(404).json({ erro: 'Plano não encontrado' });
         }
 
-        res.json({ mensagem: 'Plano excluído com sucesso' });
+        res.json({ mensagem: 'Plano excluído com sucesso', id });
     } catch (err) {
+        console.error('Erro ao excluir plano:', err.message);
         res.status(500).json({ erro: 'Erro ao excluir plano' });
     }
 };
