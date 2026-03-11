@@ -1,6 +1,5 @@
 const pool = require('../config/database');
 
-const SERIES_VALIDAS = ['Série A', 'Série B', 'Série C', 'Série D'];
 const MAX_NOME = 200;
 
 exports.listar = async (req, res) => {
@@ -52,7 +51,14 @@ exports.buscarPorId = async (req, res) => {
              ORDER BY p.valor`, [id]
         );
 
-        res.json({ ...equipe.rows[0], planos: planos.rows });
+        const campeonatos = await pool.query(
+            `SELECT c.* FROM campeonatos c
+             JOIN campeonato_equipes ce ON c.id = ce.campeonato_id
+             WHERE ce.equipe_id = $1
+             ORDER BY c.temporada DESC, c.nome`, [id]
+        );
+
+        res.json({ ...equipe.rows[0], planos: planos.rows, campeonatos: campeonatos.rows });
     } catch (err) {
         console.error('Erro ao buscar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao buscar equipe' });
@@ -60,22 +66,15 @@ exports.buscarPorId = async (req, res) => {
 };
 
 exports.criar = async (req, res) => {
-    const { nome, serie, plano_ids } = req.body;
+    const { nome, plano_ids } = req.body;
 
     const nomeTrimmed = (nome || '').trim();
-    const serieTrimmed = (serie || '').trim();
 
     if (!nomeTrimmed) {
         return res.status(400).json({ erro: 'Nome é obrigatório' });
     }
     if (nomeTrimmed.length > MAX_NOME) {
         return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
-    }
-    if (!serieTrimmed) {
-        return res.status(400).json({ erro: 'Série é obrigatória' });
-    }
-    if (!SERIES_VALIDAS.includes(serieTrimmed)) {
-        return res.status(400).json({ erro: `Série inválida. Valores aceitos: ${SERIES_VALIDAS.join(', ')}` });
     }
     if (!Array.isArray(plano_ids) || plano_ids.length === 0) {
         return res.status(400).json({ erro: 'Selecione pelo menos um plano' });
@@ -86,8 +85,8 @@ exports.criar = async (req, res) => {
         await client.query('BEGIN');
 
         const equipe = await client.query(
-            'INSERT INTO equipes (nome, serie) VALUES ($1, $2) RETURNING *',
-            [nomeTrimmed, serieTrimmed]
+            'INSERT INTO equipes (nome) VALUES ($1) RETURNING *',
+            [nomeTrimmed]
         );
 
         const equipeId = equipe.rows[0].id;
@@ -123,10 +122,9 @@ exports.criar = async (req, res) => {
 
 exports.atualizar = async (req, res) => {
     const { id } = req.params;
-    const { nome, serie, plano_ids } = req.body;
+    const { nome, plano_ids } = req.body;
 
     const nomeTrimmed = (nome || '').trim();
-    const serieTrimmed = (serie || '').trim();
 
     if (!nomeTrimmed) {
         return res.status(400).json({ erro: 'Nome é obrigatório' });
@@ -134,20 +132,14 @@ exports.atualizar = async (req, res) => {
     if (nomeTrimmed.length > MAX_NOME) {
         return res.status(400).json({ erro: `Nome não pode exceder ${MAX_NOME} caracteres` });
     }
-    if (!serieTrimmed) {
-        return res.status(400).json({ erro: 'Série é obrigatória' });
-    }
-    if (!SERIES_VALIDAS.includes(serieTrimmed)) {
-        return res.status(400).json({ erro: `Série inválida. Valores aceitos: ${SERIES_VALIDAS.join(', ')}` });
-    }
 
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
 
         const resultado = await client.query(
-            'UPDATE equipes SET nome = $1, serie = $2 WHERE id = $3 RETURNING *',
-            [nomeTrimmed, serieTrimmed, id]
+            'UPDATE equipes SET nome = $1 WHERE id = $2 RETURNING *',
+            [nomeTrimmed, id]
         );
 
         if (resultado.rows.length === 0) {

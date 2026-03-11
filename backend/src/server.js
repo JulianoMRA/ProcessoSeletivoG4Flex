@@ -10,6 +10,7 @@ const equipesRoutes = require('./routes/equipes');
 const planosRoutes = require('./routes/planos');
 const torcedoresRoutes = require('./routes/torcedores');
 const jogosRoutes = require('./routes/jogos');
+const campeonatosRoutes = require('./routes/campeonatos');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +46,7 @@ app.use('/api/equipes', equipesRoutes);
 app.use('/api/planos', planosRoutes);
 app.use('/api/torcedores', torcedoresRoutes);
 app.use('/api/jogos', jogosRoutes);
+app.use('/api/campeonatos', campeonatosRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -57,7 +59,8 @@ app.get('/api/contadores', async (req, res) => {
                 (SELECT COUNT(*) FROM equipes) AS equipes,
                 (SELECT COUNT(*) FROM torcedores) AS torcedores,
                 (SELECT COUNT(*) FROM jogos) AS jogos,
-                (SELECT COUNT(*) FROM planos) AS planos
+                (SELECT COUNT(*) FROM planos) AS planos,
+                (SELECT COUNT(*) FROM campeonatos) AS campeonatos
         `);
         res.json(result.rows[0]);
     } catch (err) {
