@@ -1,49 +1,45 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:fala_torcedor/controllers/plano_controller.dart';
+import 'package:fala_torcedor/controllers/campeonato_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/dialog.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
-import 'package:fala_torcedor/models/plano.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 import 'package:fala_torcedor/services/api_service.dart';
-import 'package:fala_torcedor/views/planos/plano_form_view.dart';
-import 'package:intl/intl.dart';
+import 'package:fala_torcedor/views/campeonatos/campeonato_form_view.dart';
 
-class PlanoDetailView extends StatefulWidget {
-  final Plano plano;
+class CampeonatoDetailView extends StatefulWidget {
+  final Campeonato campeonato;
 
-  const PlanoDetailView({super.key, required this.plano});
+  const CampeonatoDetailView({super.key, required this.campeonato});
 
   @override
-  State<PlanoDetailView> createState() => _PlanoDetailViewState();
+  State<CampeonatoDetailView> createState() => _CampeonatoDetailViewState();
 }
 
-class _PlanoDetailViewState extends State<PlanoDetailView> {
-  final _formatador = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-
-  List<Map<String, dynamic>> _equipes = [];
+class _CampeonatoDetailViewState extends State<CampeonatoDetailView> {
+  final _api = ApiService();
+  late Campeonato _campeonato;
   bool _carregando = true;
 
   @override
   void initState() {
     super.initState();
-    _carregarEquipes();
+    _campeonato = widget.campeonato;
+    _carregarDetalhes();
   }
 
-  Future<void> _carregarEquipes() async {
+  Future<void> _carregarDetalhes() async {
     try {
-      final uri = Uri.parse('${ApiService.baseUrl}/planos/${widget.plano.id}');
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['equipes'] != null) {
-          _equipes = List<Map<String, dynamic>>.from(data['equipes']);
-        }
+      final completo = await _api.getCampeonatoById(_campeonato.id!);
+      if (mounted) {
+        setState(() {
+          _campeonato = completo;
+          _carregando = false;
+        });
       }
-    } catch (_) {}
-
-    if (mounted) setState(() => _carregando = false);
+    } catch (e) {
+      if (mounted) setState(() => _carregando = false);
+    }
   }
 
   @override
@@ -59,7 +55,7 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
               final editou = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => PlanoFormView(plano: widget.plano),
+                  builder: (_) => CampeonatoFormView(campeonato: _campeonato),
                 ),
               );
               if (editou == true && context.mounted) {
@@ -81,7 +77,7 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
           children: [
             _buildHeader(),
             const SizedBox(height: 16),
-            _buildValorCard(),
+            _buildTemporada(),
             const SizedBox(height: 24),
             _buildEquipes(),
           ],
@@ -99,23 +95,19 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.accent, AppColors.accentLight],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppColors.campeonatos.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
-                Icons.card_membership_rounded,
-                color: Colors.white,
+              child: Icon(
+                Icons.emoji_events_rounded,
+                color: AppColors.campeonatos,
                 size: 32,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
-                widget.plano.nome,
+                _campeonato.nome,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -129,7 +121,7 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
     );
   }
 
-  Widget _buildValorCard() {
+  Widget _buildTemporada() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -138,25 +130,31 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.1),
+                color: AppColors.campeonatos.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.attach_money,
-                color: AppColors.accent,
+              child: Icon(
+                Icons.calendar_today_rounded,
+                color: AppColors.campeonatos,
                 size: 22,
               ),
             ),
             const SizedBox(width: 14),
-            const Expanded(
-              child: Text('Valor mensal', style: TextStyle(fontSize: 15)),
+            Expanded(
+              child: Text(
+                'Temporada',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
             Text(
-              _formatador.format(widget.plano.valor),
-              style: const TextStyle(
+              _campeonato.temporada,
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
-                color: AppColors.accent,
+                color: AppColors.campeonatos,
               ),
             ),
           ],
@@ -178,11 +176,20 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Equipes vinculadas',
+              'Equipes participantes',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${_campeonato.equipes.length}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -195,7 +202,7 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
               child: Center(child: CircularProgressIndicator()),
             ),
           )
-        else if (_equipes.isEmpty)
+        else if (_campeonato.equipes.isEmpty)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -210,8 +217,8 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
             ),
           )
         else
-          ..._equipes.map((equipe) {
-            return Card(
+          ..._campeonato.equipes.asMap().entries.map(
+            (entry) => Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: Container(
@@ -221,10 +228,19 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.shield_rounded, color: AppColors.primary, size: 20),
+                  child: Center(
+                    child: Text(
+                      '${entry.key + 1}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
                 title: Text(
-                  equipe['nome'] ?? '',
+                  entry.value.nome,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -232,8 +248,8 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
                   ),
                 ),
               ),
-            );
-          }),
+            ),
+          ),
       ],
     );
   }
@@ -241,31 +257,19 @@ class _PlanoDetailViewState extends State<PlanoDetailView> {
   void _confirmarExclusao(BuildContext context) async {
     final confirmou = await AppDialog.confirmar(
       context: context,
-      titulo: 'Excluir plano',
-      mensagem: 'Deseja excluir o plano "${widget.plano.nome}"?',
+      titulo: 'Excluir campeonato',
+      mensagem:
+          'O campeonato "${_campeonato.nome}" será excluído. Deseja continuar?',
     );
 
     if (!confirmou || !context.mounted) return;
 
-    final controller = PlanoController();
-    final planoExcluido = widget.plano;
-    final sucesso = await controller.excluirPlano(widget.plano.id!);
+    final controller = CampeonatoController();
+    final sucesso = await controller.excluirCampeonato(_campeonato.id!);
 
     if (context.mounted) {
       if (sucesso) {
-        AppSnackBar.sucesso(
-          context,
-          'Plano excluído',
-          action: SnackBarAction(
-            label: 'Desfazer',
-            textColor: Colors.white,
-            onPressed: () async {
-              try {
-                await controller.criarPlano(planoExcluido);
-              } catch (_) {}
-            },
-          ),
-        );
+        AppSnackBar.sucesso(context, 'Campeonato excluído');
         Navigator.pop(context, true);
       } else {
         AppSnackBar.erro(context, controller.erro ?? 'Erro ao excluir');

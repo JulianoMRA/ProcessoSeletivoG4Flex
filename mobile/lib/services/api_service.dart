@@ -5,6 +5,7 @@ import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/models/torcedor.dart';
 import 'package:fala_torcedor/models/jogo.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -43,7 +44,6 @@ class ApiService {
   Future<Equipe> createEquipe(Equipe equipe, List<String> planoIds) async {
     final body = {
       'nome': equipe.nome,
-      'serie': equipe.serie,
       'plano_ids': planoIds,
     };
 
@@ -67,7 +67,6 @@ class ApiService {
   ) async {
     final body = {
       'nome': equipe.nome,
-      'serie': equipe.serie,
       'plano_ids': planoIds,
     };
 
@@ -273,6 +272,76 @@ class ApiService {
     final response = await http.delete(Uri.parse('$baseUrl/jogos/$id'));
     if (response.statusCode != 200) {
       throw Exception(_extrairErro(response, 'Erro ao excluir jogo'));
+    }
+  }
+
+  // ======================= CAMPEONATOS =======================
+
+  Future<List<Campeonato>> getCampeonatos() async {
+    final response = await http.get(Uri.parse('$baseUrl/campeonatos'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((c) => Campeonato.fromJson(c)).toList();
+    }
+    throw Exception(_extrairErro(response, 'Erro ao carregar campeonatos'));
+  }
+
+  Future<Campeonato> getCampeonatoById(String id) async {
+    final response = await http.get(Uri.parse('$baseUrl/campeonatos/$id'));
+    if (response.statusCode == 200) {
+      return Campeonato.fromJson(json.decode(response.body));
+    }
+    throw Exception(_extrairErro(response, 'Erro ao buscar campeonato'));
+  }
+
+  Future<Campeonato> createCampeonato(Campeonato campeonato, List<String> equipeIds) async {
+    final body = {
+      'nome': campeonato.nome,
+      'temporada': campeonato.temporada,
+      'equipe_ids': equipeIds,
+    };
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/campeonatos'),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+      body: json.encode(body),
+      encoding: utf8,
+    );
+
+    if (response.statusCode == 201) {
+      return Campeonato.fromJson(json.decode(response.body));
+    }
+    throw Exception(_extrairErro(response, 'Erro ao criar campeonato'));
+  }
+
+  Future<Campeonato> updateCampeonato(
+    String id,
+    Campeonato campeonato,
+    List<String> equipeIds,
+  ) async {
+    final body = {
+      'nome': campeonato.nome,
+      'temporada': campeonato.temporada,
+      'equipe_ids': equipeIds,
+    };
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/campeonatos/$id'),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+      body: json.encode(body),
+      encoding: utf8,
+    );
+
+    if (response.statusCode == 200) {
+      return Campeonato.fromJson(json.decode(response.body));
+    }
+    throw Exception(_extrairErro(response, 'Erro ao atualizar campeonato'));
+  }
+
+  Future<void> deleteCampeonato(String id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/campeonatos/$id'));
+    if (response.statusCode != 200) {
+      throw Exception(_extrairErro(response, 'Erro ao excluir campeonato'));
     }
   }
 }

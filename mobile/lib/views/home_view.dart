@@ -8,6 +8,7 @@ import 'package:fala_torcedor/views/equipes/equipes_list_view.dart';
 import 'package:fala_torcedor/views/jogos/jogos_list_view.dart';
 import 'package:fala_torcedor/views/planos/planos_list_view.dart';
 import 'package:fala_torcedor/views/torcedores/torcedores_list_view.dart';
+import 'package:fala_torcedor/views/campeonatos/campeonatos_list_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -53,6 +54,7 @@ class _HomeViewState extends State<HomeView>
               'torcedores': int.tryParse('${data['torcedores']}') ?? 0,
               'jogos': int.tryParse('${data['jogos']}') ?? 0,
               'planos': int.tryParse('${data['planos']}') ?? 0,
+              'campeonatos': int.tryParse('${data['campeonatos']}') ?? 0,
             };
           });
         }
@@ -175,6 +177,14 @@ class _HomeViewState extends State<HomeView>
             onTap: () {
               Navigator.pop(context);
               _navegarPara(context, const PlanosListView());
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.emoji_events_rounded,
+            label: 'Campeonatos',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const CampeonatosListView());
             },
           ),
           const Divider(),
@@ -350,7 +360,7 @@ class _HomeViewState extends State<HomeView>
         ),
         const SizedBox(height: 8),
         Text(
-          'Gerencie equipes, planos, torcedores e jogos',
+          'Gerencie equipes, planos, torcedores, jogos e campeonatos',
           style: TextStyle(
             fontSize: 16,
             color: Theme.of(ctx).colorScheme.onSurfaceVariant,
@@ -418,6 +428,21 @@ class _HomeViewState extends State<HomeView>
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const JogosListView()),
+            );
+            _carregarContadores();
+          },
+        ),
+        const SizedBox(height: 16),
+        _MenuCard(
+          icon: Icons.emoji_events_rounded,
+          title: 'Campeonatos',
+          subtitle: 'Criar e gerenciar campeonatos',
+          contador: _contadores['campeonatos'],
+          gradient: [AppColors.campeonatos, AppColors.campeonatosLight],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CampeonatosListView()),
             );
             _carregarContadores();
           },

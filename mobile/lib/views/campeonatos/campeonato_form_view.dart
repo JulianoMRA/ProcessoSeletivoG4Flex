@@ -1,56 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:fala_torcedor/controllers/equipe_controller.dart';
+import 'package:fala_torcedor/controllers/campeonato_controller.dart';
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 import 'package:fala_torcedor/models/equipe.dart';
-import 'package:fala_torcedor/models/plano.dart';
 import 'package:fala_torcedor/services/api_service.dart';
-import 'package:intl/intl.dart';
 
-class EquipeFormView extends StatefulWidget {
-  final Equipe? equipe;
+class CampeonatoFormView extends StatefulWidget {
+  final Campeonato? campeonato;
 
-  const EquipeFormView({super.key, this.equipe});
+  const CampeonatoFormView({super.key, this.campeonato});
 
   @override
-  State<EquipeFormView> createState() => _EquipeFormViewState();
+  State<CampeonatoFormView> createState() => _CampeonatoFormViewState();
 }
 
-class _EquipeFormViewState extends State<EquipeFormView> {
+class _CampeonatoFormViewState extends State<CampeonatoFormView> {
   final _formKey = GlobalKey<FormState>();
-  final _controller = EquipeController();
+  final _controller = CampeonatoController();
   final _api = ApiService();
-  final _formatador = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   late final TextEditingController _nomeCtrl;
+  late final TextEditingController _temporadaCtrl;
   bool _salvando = false;
   bool _carregando = true;
   bool _modificado = false;
 
-  List<Plano> _todosPlanos = [];
-  final Set<String> _planosSelecionados = {};
+  List<Equipe> _todasEquipes = [];
+  final Set<String> _equipesSelecionadas = {};
 
-  bool get _editando => widget.equipe != null;
+  bool get _editando => widget.campeonato != null;
 
   @override
   void initState() {
     super.initState();
-    final eq = widget.equipe;
-
-    _nomeCtrl = TextEditingController(text: eq?.nome ?? '');
+    final c = widget.campeonato;
+    _nomeCtrl = TextEditingController(text: c?.nome ?? '');
+    _temporadaCtrl = TextEditingController(
+      text: c?.temporada ?? DateTime.now().year.toString(),
+    );
 
     _nomeCtrl.addListener(_marcarModificado);
+    _temporadaCtrl.addListener(_marcarModificado);
     _carregarDados();
   }
 
   Future<void> _carregarDados() async {
     try {
-      _todosPlanos = await _api.getPlanos();
+      _todasEquipes = await _api.getEquipes();
 
       if (_editando) {
-        final equipeCompleta = await _api.getEquipeById(widget.equipe!.id!);
-        for (final plano in equipeCompleta.planos) {
-          _planosSelecionados.add(plano.id!);
+        final completo = await _api.getCampeonatoById(widget.campeonato!.id!);
+        for (final eq in completo.equipes) {
+          _equipesSelecionadas.add(eq.id!);
         }
       }
     } catch (e) {
@@ -67,35 +69,36 @@ class _EquipeFormViewState extends State<EquipeFormView> {
   @override
   void dispose() {
     _nomeCtrl.dispose();
+    _temporadaCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_planosSelecionados.isEmpty) {
-      AppSnackBar.info(context, 'Selecione pelo menos um plano');
+    if (_equipesSelecionadas.length < 2) {
+      AppSnackBar.info(context, 'Selecione pelo menos duas equipes');
       return;
     }
 
     setState(() => _salvando = true);
 
-    final equipe = Equipe(
+    final campeonato = Campeonato(
       nome: _nomeCtrl.text.trim(),
-      qtdSocios: widget.equipe?.qtdSocios ?? 0,
+      temporada: _temporadaCtrl.text.trim(),
     );
 
     bool sucesso;
     if (_editando) {
-      sucesso = await _controller.atualizarEquipe(
-        widget.equipe!.id!,
-        equipe,
-        _planosSelecionados.toList(),
+      sucesso = await _controller.atualizarCampeonato(
+        widget.campeonato!.id!,
+        campeonato,
+        _equipesSelecionadas.toList(),
       );
     } else {
-      sucesso = await _controller.criarEquipe(
-        equipe,
-        _planosSelecionados.toList(),
+      sucesso = await _controller.criarCampeonato(
+        campeonato,
+        _equipesSelecionadas.toList(),
       );
     }
 
@@ -104,86 +107,12 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     if (sucesso && mounted) {
       AppSnackBar.sucesso(
         context,
-        _editando ? 'Equipe atualizada!' : 'Equipe criada!',
+        _editando ? 'Campeonato atualizado!' : 'Campeonato criado!',
       );
       Navigator.pop(context, true);
     } else if (mounted) {
       AppSnackBar.erro(context, _controller.erro ?? 'Erro desconhecido');
     }
-  }
-
-  Future<void> _criarPlanoInline() async {
-    final nomeCtrl = TextEditingController();
-    final valorCtrl = TextEditingController();
-
-    final criou = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Novo plano'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nomeCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Nome do plano',
-                prefixIcon: Icon(Icons.card_membership_outlined),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: valorCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Valor mensal (R\$)',
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nomeCtrl.text.trim().isEmpty ||
-                  valorCtrl.text.trim().isEmpty ||
-                  double.tryParse(valorCtrl.text.trim()) == null) {
-                return;
-              }
-              Navigator.pop(ctx, true);
-            },
-            child: const Text('Criar'),
-          ),
-        ],
-      ),
-    );
-
-    if (criou == true) {
-      final plano = Plano(
-        nome: nomeCtrl.text.trim(),
-        valor: double.parse(valorCtrl.text.trim()),
-      );
-      try {
-        final novo = await _api.createPlano(plano);
-        setState(() {
-          _todosPlanos.add(novo);
-          _planosSelecionados.add(novo.id!);
-          _modificado = true;
-        });
-      } catch (e) {
-        if (mounted) {
-          AppSnackBar.erro(context, 'Erro ao criar plano');
-        }
-      }
-    }
-
-    nomeCtrl.dispose();
-    valorCtrl.dispose();
   }
 
   Future<bool> _confirmarSaida() async {
@@ -223,7 +152,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_editando ? 'Editar Equipe' : 'Nova Equipe'),
+          title: Text(_editando ? 'Editar Campeonato' : 'Novo Campeonato'),
         ),
         body: _carregando
             ? const Center(child: CircularProgressIndicator())
@@ -239,32 +168,36 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                       TextFormField(
                         controller: _nomeCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Nome da equipe',
-                          prefixIcon: Icon(Icons.shield_outlined),
+                          labelText: 'Nome do campeonato',
+                          prefixIcon: Icon(Icons.emoji_events_outlined),
                         ),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Informe o nome'
                             : null,
                       ),
                       const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _temporadaCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Temporada',
+                          prefixIcon: Icon(Icons.calendar_today_outlined),
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Informe a temporada'
+                            : null,
+                      ),
                       const SizedBox(height: 28),
-                      _buildSectionTitle('Planos de sócio'),
+                      _buildSectionTitle('Equipes participantes'),
                       const SizedBox(height: 4),
                       Text(
-                        'Selecione os planos disponíveis para esta equipe',
+                        'Selecione pelo menos 2 equipes',
                         style: TextStyle(
                           fontSize: 13,
                           color: Theme.of(context).hintColor,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _buildPlanosSelection(),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _criarPlanoInline,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Criar novo plano'),
-                      ),
+                      _buildEquipesSelection(),
                       const SizedBox(height: 32),
                       FilledButton(
                         onPressed: _salvando ? null : _salvar,
@@ -283,7 +216,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                             : Text(
                                 _editando
                                     ? 'Salvar alterações'
-                                    : 'Criar equipe',
+                                    : 'Criar campeonato',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -299,14 +232,14 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     );
   }
 
-  Widget _buildPlanosSelection() {
-    if (_todosPlanos.isEmpty) {
+  Widget _buildEquipesSelection() {
+    if (_todasEquipes.isEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Center(
             child: Text(
-              'Nenhum plano cadastrado. Crie um abaixo.',
+              'Nenhuma equipe cadastrada.',
               style: TextStyle(color: Theme.of(context).hintColor),
             ),
           ),
@@ -317,26 +250,26 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: _todosPlanos.map((plano) {
-        final selecionado = _planosSelecionados.contains(plano.id);
+      children: _todasEquipes.map((equipe) {
+        final selecionada = _equipesSelecionadas.contains(equipe.id);
         return FilterChip(
-          label: Text('${plano.nome} — ${_formatador.format(plano.valor)}'),
-          selected: selecionado,
+          label: Text(equipe.nome),
+          selected: selecionada,
           showCheckmark: true,
-          selectedColor: AppColors.primary.withValues(alpha: 0.15),
-          checkmarkColor: AppColors.primary,
+          selectedColor: AppColors.campeonatos.withValues(alpha: 0.15),
+          checkmarkColor: AppColors.campeonatos,
           labelStyle: TextStyle(
-            fontWeight: selecionado ? FontWeight.w600 : FontWeight.w400,
-            color: selecionado
-                ? AppColors.primary
+            fontWeight: selecionada ? FontWeight.w600 : FontWeight.w400,
+            color: selecionada
+                ? AppColors.campeonatos
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           onSelected: (selected) {
             setState(() {
               if (selected) {
-                _planosSelecionados.add(plano.id!);
+                _equipesSelecionadas.add(equipe.id!);
               } else {
-                _planosSelecionados.remove(plano.id!);
+                _equipesSelecionadas.remove(equipe.id!);
               }
               _modificado = true;
             });
@@ -353,7 +286,7 @@ class _EquipeFormViewState extends State<EquipeFormView> {
           width: 4,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            color: AppColors.campeonatos,
             borderRadius: BorderRadius.circular(2),
           ),
         ),

@@ -163,7 +163,7 @@ class _TorcedoresListViewState extends State<TorcedoresListView> {
                       (eq) => _buildFilterOption(
                         label: eq.nome,
                         selected: _filtroEquipe?.id == eq.id,
-                        color: AppColors.corSerie(eq.serie),
+                        color: AppColors.primary,
                         onTap: () {
                           setModalState(() => _filtroEquipe = eq);
                           setState(() {});

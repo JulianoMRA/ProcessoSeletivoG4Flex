@@ -8,7 +8,7 @@ import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/views/equipes/equipe_form_view.dart';
 import 'package:fala_torcedor/views/equipes/equipe_detail_view.dart';
 
-enum OrdenacaoEquipe { nome, socios, serie }
+enum OrdenacaoEquipe { nome, socios }
 
 class EquipesListView extends StatefulWidget {
   const EquipesListView({super.key});
@@ -21,17 +21,11 @@ class _EquipesListViewState extends State<EquipesListView> {
   final _controller = EquipeController();
   final _buscaCtrl = TextEditingController();
 
-  String? _filtroSerie;
   OrdenacaoEquipe _ordenacao = OrdenacaoEquipe.nome;
   bool _ordemCrescente = true;
 
   List<Equipe> get _equipesFiltradas {
     var lista = _controller.equipes.toList();
-
-    // Filtro por série
-    if (_filtroSerie != null) {
-      lista = lista.where((e) => e.serie == _filtroSerie).toList();
-    }
 
     // Filtro por busca
     final busca = _buscaCtrl.text.toLowerCase();
@@ -47,23 +41,11 @@ class _EquipesListViewState extends State<EquipesListView> {
           resultado = a.nome.compareTo(b.nome);
         case OrdenacaoEquipe.socios:
           resultado = a.qtdSocios.compareTo(b.qtdSocios);
-        case OrdenacaoEquipe.serie:
-          resultado = _ordemSerie(a.serie).compareTo(_ordemSerie(b.serie));
       }
       return _ordemCrescente ? resultado : -resultado;
     });
 
     return lista;
-  }
-
-  int _ordemSerie(String serie) {
-    return switch (serie) {
-      'Série A' => 1,
-      'Série B' => 2,
-      'Série C' => 3,
-      'Série D' => 4,
-      _ => 5,
-    };
   }
 
   @override
@@ -85,8 +67,6 @@ class _EquipesListViewState extends State<EquipesListView> {
   void _onUpdate() {
     if (mounted) setState(() {});
   }
-
-  static const _series = ['Série A', 'Série B', 'Série C', 'Série D'];
 
   void _mostrarOpcoesFiltro() {
     showModalBottomSheet(
@@ -117,7 +97,6 @@ class _EquipesListViewState extends State<EquipesListView> {
                   TextButton(
                     onPressed: () {
                       setModalState(() {
-                        _filtroSerie = null;
                         _ordenacao = OrdenacaoEquipe.nome;
                         _ordemCrescente = true;
                       });
@@ -127,44 +106,7 @@ class _EquipesListViewState extends State<EquipesListView> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // Filtro por série
-              Text(
-                'Filtrar por série',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildFilterOption(
-                    label: 'Todas',
-                    selected: _filtroSerie == null,
-                    onTap: () {
-                      setModalState(() => _filtroSerie = null);
-                      setState(() {});
-                    },
-                  ),
-                  ..._series.map(
-                    (s) => _buildFilterOption(
-                      label: s.replaceFirst('Série ', ''),
-                      selected: _filtroSerie == s,
-                      color: AppColors.corSerie(s),
-                      onTap: () {
-                        setModalState(() => _filtroSerie = s);
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 4),
 
               // Ordenação
               Text(
@@ -195,15 +137,6 @@ class _EquipesListViewState extends State<EquipesListView> {
                     selected: _ordenacao == OrdenacaoEquipe.socios,
                     onTap: () {
                       setModalState(() => _ordenacao = OrdenacaoEquipe.socios);
-                      setState(() {});
-                    },
-                  ),
-                  _buildSortOption(
-                    label: 'Divisão',
-                    icon: Icons.emoji_events_rounded,
-                    selected: _ordenacao == OrdenacaoEquipe.serie,
-                    onTap: () {
-                      setModalState(() => _ordenacao = OrdenacaoEquipe.serie);
                       setState(() {});
                     },
                   ),
@@ -246,37 +179,6 @@ class _EquipesListViewState extends State<EquipesListView> {
               ),
               const SizedBox(height: 20),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterOption({
-    required String label,
-    required bool selected,
-    Color? color,
-    required VoidCallback onTap,
-  }) {
-    final chipColor = color ?? AppColors.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? chipColor
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected
-                ? Colors.white
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -327,7 +229,6 @@ class _EquipesListViewState extends State<EquipesListView> {
   }
 
   bool get _temFiltrosAtivos =>
-      _filtroSerie != null ||
       _ordenacao != OrdenacaoEquipe.nome ||
       !_ordemCrescente;
 
@@ -405,7 +306,6 @@ class _EquipesListViewState extends State<EquipesListView> {
           ),
           GestureDetector(
             onTap: () => setState(() {
-              _filtroSerie = null;
               _ordenacao = OrdenacaoEquipe.nome;
               _ordemCrescente = true;
             }),
@@ -424,21 +324,12 @@ class _EquipesListViewState extends State<EquipesListView> {
   }
 
   String _descricaoFiltros() {
-    final partes = <String>[];
-
-    if (_filtroSerie != null) {
-      partes.add(_filtroSerie!);
-    }
-
     final ordenacaoTexto = switch (_ordenacao) {
       OrdenacaoEquipe.nome => 'Nome',
       OrdenacaoEquipe.socios => 'Sócios',
-      OrdenacaoEquipe.serie => 'Divisão',
     };
     final direcao = _ordemCrescente ? '↑' : '↓';
-    partes.add('$ordenacaoTexto $direcao');
-
-    return partes.join(' • ');
+    return '$ordenacaoTexto $direcao';
   }
 
   Widget _buildBody() {
@@ -546,7 +437,6 @@ class _EquipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final corSerie = AppColors.corSerie(equipe.serie);
     final cs = Theme.of(context).colorScheme;
 
     return Card(
@@ -560,10 +450,10 @@ class _EquipeCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: corSerie.withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.shield_rounded, color: corSerie, size: 24),
+                child: const Icon(Icons.shield_rounded, color: AppColors.primary, size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -581,25 +471,6 @@ class _EquipeCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: corSerie.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            equipe.serie,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: corSerie,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
                         Icon(
                           Icons.people_outline_rounded,
                           size: 14,

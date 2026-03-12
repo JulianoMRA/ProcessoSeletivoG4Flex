@@ -85,7 +85,7 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final cor = AppColors.corSerie(_equipe.serie);
+    final cor = AppColors.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -156,25 +156,6 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _equipe.serie,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: cor,
-                      ),
                     ),
                   ),
                 ],

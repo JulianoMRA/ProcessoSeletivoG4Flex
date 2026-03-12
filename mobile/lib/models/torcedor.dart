@@ -32,7 +32,6 @@ class Torcedor {
       equipe = Equipe(
         id: json['equipe_id'] as String,
         nome: json['equipe_nome'] as String,
-        serie: json['equipe_serie'] as String,
         qtdSocios: 0,
       );
     }
