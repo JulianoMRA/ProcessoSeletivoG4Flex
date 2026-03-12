@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/models/equipe.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 
 class JogoController extends ChangeNotifier {
@@ -8,6 +9,7 @@ class JogoController extends ChangeNotifier {
 
   List<Jogo> jogos = [];
   List<Equipe> equipes = [];
+  List<Campeonato> campeonatos = [];
   bool isLoading = false;
   String? erro;
 
@@ -33,6 +35,24 @@ class JogoController extends ChangeNotifier {
       erro = 'Erro ao carregar equipes: $e';
     }
     notifyListeners();
+  }
+
+  Future<void> carregarCampeonatos() async {
+    try {
+      campeonatos = await _service.getCampeonatos();
+    } catch (e) {
+      erro = 'Erro ao carregar campeonatos: $e';
+    }
+    notifyListeners();
+  }
+
+  // Retorna equipes que pertencem ao campeonato selecionado
+  List<Equipe> equipesDoCampeonato(String campeonatoId) {
+    final campeonato = campeonatos
+        .where((c) => c.id == campeonatoId)
+        .firstOrNull;
+    if (campeonato == null) return [];
+    return campeonato.equipes;
   }
 
   Future<bool> criarJogo(Jogo jogo) async {

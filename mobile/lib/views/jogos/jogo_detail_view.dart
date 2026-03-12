@@ -306,6 +306,12 @@ class _JogoDetailViewState extends State<JogoDetailView> {
             ),
             const SizedBox(height: 16),
             _buildInfoRow(
+              icon: Icons.emoji_events_rounded,
+              label: 'Campeonato',
+              value: _jogo.campeonatoNome ?? '—',
+            ),
+            const Divider(height: 24),
+            _buildInfoRow(
               icon: Icons.calendar_today_rounded,
               label: 'Data',
               value: formatadorData.format(_jogo.data),

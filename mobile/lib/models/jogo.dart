@@ -9,6 +9,8 @@ class Jogo {
   final int golsEquipeA;
   final int golsEquipeB;
   final String vencedor;
+  final String campeonatoId;
+  final String? campeonatoNome;
 
   Jogo({
     this.id,
@@ -21,6 +23,8 @@ class Jogo {
     required this.golsEquipeA,
     required this.golsEquipeB,
     this.vencedor = 'empate',
+    required this.campeonatoId,
+    this.campeonatoNome,
   });
 
   factory Jogo.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,8 @@ class Jogo {
       golsEquipeA: json['gols_equipe_a'] as int,
       golsEquipeB: json['gols_equipe_b'] as int,
       vencedor: json['vencedor'] as String? ?? 'empate',
+      campeonatoId: json['campeonato_id'] as String,
+      campeonatoNome: json['campeonato_nome'] as String?,
     );
   }
 
@@ -47,6 +53,7 @@ class Jogo {
       'equipe_b_id': equipeBId,
       'gols_equipe_a': golsEquipeA,
       'gols_equipe_b': golsEquipeB,
+      'campeonato_id': campeonatoId,
     };
   }
 

@@ -4,6 +4,7 @@ import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/jogo.dart';
 import 'package:fala_torcedor/models/equipe.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 import 'package:intl/intl.dart';
 
 class JogoFormView extends StatefulWidget {
@@ -23,6 +24,7 @@ class _JogoFormViewState extends State<JogoFormView> {
 
   DateTime? _data;
   TimeOfDay? _hora;
+  Campeonato? _campeonato;
   Equipe? _equipeA;
   Equipe? _equipeB;
   bool _salvando = false;
@@ -30,6 +32,12 @@ class _JogoFormViewState extends State<JogoFormView> {
   bool _modificado = false;
 
   bool get _editando => widget.jogo != null;
+
+  // Equipes filtradas pelo campeonato selecionado
+  List<Equipe> get _equipesDisponiveis {
+    if (_campeonato == null) return [];
+    return _controller.equipesDoCampeonato(_campeonato!.id!);
+  }
 
   @override
   void initState() {
@@ -58,13 +66,26 @@ class _JogoFormViewState extends State<JogoFormView> {
   }
 
   Future<void> _carregarDados() async {
-    await _controller.carregarEquipes();
+    await Future.wait([
+      _controller.carregarCampeonatos(),
+      _controller.carregarEquipes(),
+    ]);
 
     if (_editando) {
-      _equipeA = _controller.equipes
+      // Busca o campeonato do jogo
+      _campeonato = _controller.campeonatos
+          .where((c) => c.id == widget.jogo!.campeonatoId)
+          .firstOrNull;
+
+      // Busca as equipes dentro do campeonato (ou geral se não encontrar)
+      final equipesList = _equipesDisponiveis.isNotEmpty
+          ? _equipesDisponiveis
+          : _controller.equipes;
+
+      _equipeA = equipesList
           .where((e) => e.id == widget.jogo!.equipeAId)
           .firstOrNull;
-      _equipeB = _controller.equipes
+      _equipeB = equipesList
           .where((e) => e.id == widget.jogo!.equipeBId)
           .firstOrNull;
     }
@@ -128,6 +149,10 @@ class _JogoFormViewState extends State<JogoFormView> {
       AppSnackBar.info(context, 'Selecione o horário do jogo');
       return;
     }
+    if (_campeonato == null) {
+      AppSnackBar.info(context, 'Selecione o campeonato');
+      return;
+    }
 
     setState(() => _salvando = true);
 
@@ -138,6 +163,7 @@ class _JogoFormViewState extends State<JogoFormView> {
       equipeBId: _equipeB!.id!,
       golsEquipeA: int.parse(_golsACtrl.text.trim()),
       golsEquipeB: int.parse(_golsBCtrl.text.trim()),
+      campeonatoId: _campeonato!.id!,
     );
 
     bool sucesso;
@@ -206,6 +232,36 @@ class _JogoFormViewState extends State<JogoFormView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      _buildSectionTitle('Campeonato'),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<Campeonato>(
+                        value: _campeonato,
+                        decoration: const InputDecoration(
+                          labelText: 'Campeonato',
+                          prefixIcon: Icon(Icons.emoji_events_outlined),
+                        ),
+                        items: _controller.campeonatos
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c,
+                                child:
+                                    Text('${c.nome} ${c.temporada}'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (campeonato) {
+                          setState(() {
+                            _campeonato = campeonato;
+                            // Limpa equipes ao trocar campeonato
+                            _equipeA = null;
+                            _equipeB = null;
+                            _modificado = true;
+                          });
+                        },
+                        validator: (v) =>
+                            v == null ? 'Selecione o campeonato' : null,
+                      ),
+                      const SizedBox(height: 28),
                       _buildSectionTitle('Data e horário'),
                       const SizedBox(height: 12),
                       Row(
@@ -265,60 +321,86 @@ class _JogoFormViewState extends State<JogoFormView> {
                       ),
                       const SizedBox(height: 28),
                       _buildSectionTitle('Equipes'),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<Equipe>(
-                        value: _equipeA,
-                        decoration: const InputDecoration(
-                          labelText: 'Mandante (Equipe A)',
-                          prefixIcon: Icon(Icons.shield_outlined),
+                      if (_campeonato == null) ...[
+                        const SizedBox(height: 12),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Theme.of(context).hintColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Selecione um campeonato para ver as equipes disponíveis.',
+                                    style: TextStyle(
+                                      color: Theme.of(context).hintColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        items: _controller.equipes
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.nome),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (equipe) {
-                          setState(() {
-                            _equipeA = equipe;
-                            _modificado = true;
-                          });
-                        },
-                        validator: (v) =>
-                            v == null ? 'Selecione o mandante' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<Equipe>(
-                        value: _equipeB,
-                        decoration: const InputDecoration(
-                          labelText: 'Visitante (Equipe B)',
-                          prefixIcon: Icon(Icons.shield_outlined),
+                      ] else ...[
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<Equipe>(
+                          value: _equipeA,
+                          decoration: const InputDecoration(
+                            labelText: 'Mandante (Equipe A)',
+                            prefixIcon: Icon(Icons.shield_outlined),
+                          ),
+                          items: _equipesDisponiveis
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e.nome),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (equipe) {
+                            setState(() {
+                              _equipeA = equipe;
+                              _modificado = true;
+                            });
+                          },
+                          validator: (v) =>
+                              v == null ? 'Selecione o mandante' : null,
                         ),
-                        items: _controller.equipes
-                            .where((e) => e.id != _equipeA?.id)
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e.nome),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (equipe) {
-                          setState(() {
-                            _equipeB = equipe;
-                            _modificado = true;
-                          });
-                        },
-                        validator: (v) {
-                          if (v == null) return 'Selecione o visitante';
-                          if (v.id == _equipeA?.id) {
-                            return 'Deve ser diferente do mandante';
-                          }
-                          return null;
-                        },
-                      ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<Equipe>(
+                          value: _equipeB,
+                          decoration: const InputDecoration(
+                            labelText: 'Visitante (Equipe B)',
+                            prefixIcon: Icon(Icons.shield_outlined),
+                          ),
+                          items: _equipesDisponiveis
+                              .where((e) => e.id != _equipeA?.id)
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e.nome),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (equipe) {
+                            setState(() {
+                              _equipeB = equipe;
+                              _modificado = true;
+                            });
+                          },
+                          validator: (v) {
+                            if (v == null) return 'Selecione o visitante';
+                            if (v.id == _equipeA?.id) {
+                              return 'Deve ser diferente do mandante';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 28),
                       _buildSectionTitle('Placar'),
                       const SizedBox(height: 12),

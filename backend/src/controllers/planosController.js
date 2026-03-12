@@ -54,7 +54,7 @@ exports.buscarPorId = async (req, res) => {
         }
 
         const equipes = await pool.query(
-            `SELECT e.id, e.nome, e.serie FROM equipes e
+            `SELECT e.id, e.nome FROM equipes e
              JOIN equipe_planos ep ON e.id = ep.equipe_id
              WHERE ep.plano_id = $1
              ORDER BY e.nome`, [id]

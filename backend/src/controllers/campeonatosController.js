@@ -6,6 +6,22 @@ exports.listar = async (req, res) => {
     try {
         const { page, limit } = req.query;
 
+        const baseQuery = `
+            SELECT c.*,
+            COALESCE(
+                (SELECT json_agg(e.*) 
+                 FROM (
+                     SELECT eq.id, eq.nome, eq.qtd_socios 
+                     FROM equipes eq 
+                     JOIN campeonato_equipes ce ON eq.id = ce.equipe_id 
+                     WHERE ce.campeonato_id = c.id 
+                     ORDER BY eq.nome
+                 ) e), 
+                '[]'::json
+            ) AS equipes
+            FROM campeonatos c
+        `;
+
         if (page && limit) {
             const pagina = Math.max(1, parseInt(page) || 1);
             const limite = Math.min(100, Math.max(1, parseInt(limit) || 20));
@@ -15,7 +31,7 @@ exports.listar = async (req, res) => {
             const total = parseInt(countResult.rows[0].count);
 
             const result = await pool.query(
-                'SELECT * FROM campeonatos ORDER BY temporada DESC, nome LIMIT $1 OFFSET $2',
+                `${baseQuery} ORDER BY c.temporada DESC, c.nome LIMIT $1 OFFSET $2`,
                 [limite, offset]
             );
 
@@ -23,7 +39,7 @@ exports.listar = async (req, res) => {
         }
 
         const result = await pool.query(
-            'SELECT * FROM campeonatos ORDER BY temporada DESC, nome'
+            `${baseQuery} ORDER BY c.temporada DESC, c.nome`
         );
         res.json(result.rows);
     } catch (err) {

@@ -7,6 +7,7 @@ const criados = {
     planos: [],
     equipes: [],
     torcedores: [],
+    campeonatos: [],
     jogos: [],
 };
 
@@ -18,7 +19,12 @@ afterAll(async () => {
     for (const id of criados.torcedores) {
         await pool.query('DELETE FROM torcedores WHERE id = $1', [id]).catch(() => { });
     }
+    for (const id of criados.campeonatos) {
+        await pool.query('DELETE FROM campeonato_equipes WHERE campeonato_id = $1', [id]).catch(() => { });
+        await pool.query('DELETE FROM campeonatos WHERE id = $1', [id]).catch(() => { });
+    }
     for (const id of criados.equipes) {
+        await pool.query('DELETE FROM campeonato_equipes WHERE equipe_id = $1', [id]).catch(() => { });
         await pool.query('DELETE FROM equipe_planos WHERE equipe_id = $1', [id]).catch(() => { });
         await pool.query('DELETE FROM equipes WHERE id = $1', [id]).catch(() => { });
     }
@@ -52,6 +58,7 @@ describe('GET /api/contadores', () => {
         expect(res.body).toHaveProperty('torcedores');
         expect(res.body).toHaveProperty('jogos');
         expect(res.body).toHaveProperty('planos');
+        expect(res.body).toHaveProperty('campeonatos');
     });
 });
 
@@ -197,7 +204,6 @@ describe('EQUIPES', () => {
                 .post('/api/equipes')
                 .send({
                     nome: 'Equipe Teste A',
-                    serie: 'Série A',
                     plano_ids: [criados.planos[0]],
                 });
             expect(res.statusCode).toBe(201);
@@ -211,7 +217,6 @@ describe('EQUIPES', () => {
                 .post('/api/equipes')
                 .send({
                     nome: 'Equipe Teste B',
-                    serie: 'Série B',
                     plano_ids: [criados.planos[1]],
                 });
             expect(res.statusCode).toBe(201);
@@ -221,21 +226,14 @@ describe('EQUIPES', () => {
         it('deve rejeitar sem nome', async () => {
             const res = await request(app)
                 .post('/api/equipes')
-                .send({ nome: '', serie: 'A', plano_ids: [criados.planos[0]] });
-            expect(res.statusCode).toBe(400);
-        });
-
-        it('deve rejeitar sem série', async () => {
-            const res = await request(app)
-                .post('/api/equipes')
-                .send({ nome: 'X', serie: '', plano_ids: [criados.planos[0]] });
+                .send({ nome: '', plano_ids: [criados.planos[0]] });
             expect(res.statusCode).toBe(400);
         });
 
         it('deve rejeitar sem planos', async () => {
             const res = await request(app)
                 .post('/api/equipes')
-                .send({ nome: 'X', serie: 'A', plano_ids: [] });
+                .send({ nome: 'X', plano_ids: [] });
             expect(res.statusCode).toBe(400);
         });
 
@@ -244,7 +242,6 @@ describe('EQUIPES', () => {
                 .post('/api/equipes')
                 .send({
                     nome: 'São Paulo FC',
-                    serie: 'Série A',
                     plano_ids: [criados.planos[0]],
                 });
             expect(res.statusCode).toBe(201);
@@ -257,7 +254,6 @@ describe('EQUIPES', () => {
                 .post('/api/equipes')
                 .send({
                     nome: '  Equipe Trimmed  ',
-                    serie: 'Série A',
                     plano_ids: [criados.planos[0]],
                 });
             expect(res.statusCode).toBe(201);
@@ -303,23 +299,10 @@ describe('EQUIPES', () => {
                 .put(`/api/equipes/${criados.equipes[0]}`)
                 .send({
                     nome: 'Equipe A Atualizada',
-                    serie: 'Série B',
                     plano_ids: [criados.planos[0], criados.planos[1]],
                 });
             expect(res.statusCode).toBe(200);
             expect(res.body.nome).toBe('Equipe A Atualizada');
-        });
-
-        it('deve rejeitar série inválida no update', async () => {
-            const res = await request(app)
-                .put(`/api/equipes/${criados.equipes[0]}`)
-                .send({
-                    nome: 'Teste',
-                    serie: 'Série Z',
-                    plano_ids: [criados.planos[0]],
-                });
-            expect(res.statusCode).toBe(400);
-            expect(res.body.erro).toContain('inválida');
         });
 
         it('deve rejeitar plano inexistente no update', async () => {
@@ -327,7 +310,6 @@ describe('EQUIPES', () => {
                 .put(`/api/equipes/${criados.equipes[0]}`)
                 .send({
                     nome: 'Teste',
-                    serie: 'Série A',
                     plano_ids: ['00000000-0000-0000-0000-000000000000'],
                 });
             expect(res.statusCode).toBe(400);
@@ -488,6 +470,21 @@ describe('TORCEDORES', () => {
         });
     });
 
+    describe('GET /api/torcedores/:id', () => {
+        it('deve buscar torcedor por id', async () => {
+            const res = await request(app).get(`/api/torcedores/${criados.torcedores[0]}`);
+            expect(res.statusCode).toBe(200);
+            expect(res.body.nome).toBeDefined();
+            expect(res.body.equipe_nome).toBeDefined();
+            expect(res.body.plano_nome).toBeDefined();
+        });
+
+        it('deve retornar 404 para torcedor inexistente', async () => {
+            const res = await request(app).get('/api/torcedores/00000000-0000-0000-0000-000000000000');
+            expect(res.statusCode).toBe(404);
+        });
+    });
+
     describe('PUT /api/torcedores/:id', () => {
         it('deve atualizar torcedor', async () => {
             const res = await request(app)
@@ -547,16 +544,133 @@ describe('TORCEDORES', () => {
 });
 
 // ============================================================
+// CAMPEONATOS
+// ============================================================
+describe('CAMPEONATOS', () => {
+    describe('POST /api/campeonatos', () => {
+        it('deve criar campeonato válido com equipes', async () => {
+            const res = await request(app)
+                .post('/api/campeonatos')
+                .send({
+                    nome: 'Campeonato Teste',
+                    temporada: '2025',
+                    equipe_ids: [criados.equipes[0], criados.equipes[1]],
+                });
+            expect(res.statusCode).toBe(201);
+            expect(res.body.nome).toBe('Campeonato Teste');
+            expect(res.body.equipes.length).toBe(2);
+            criados.campeonatos.push(res.body.id);
+        });
+
+        it('deve rejeitar sem nome', async () => {
+            const res = await request(app)
+                .post('/api/campeonatos')
+                .send({
+                    nome: '',
+                    temporada: '2025',
+                    equipe_ids: [criados.equipes[0]],
+                });
+            expect(res.statusCode).toBe(400);
+        });
+
+        it('deve rejeitar sem temporada', async () => {
+            const res = await request(app)
+                .post('/api/campeonatos')
+                .send({
+                    nome: 'Teste',
+                    temporada: '',
+                    equipe_ids: [criados.equipes[0]],
+                });
+            expect(res.statusCode).toBe(400);
+        });
+
+        it('deve rejeitar sem equipes', async () => {
+            const res = await request(app)
+                .post('/api/campeonatos')
+                .send({
+                    nome: 'Teste',
+                    temporada: '2025',
+                    equipe_ids: [],
+                });
+            expect(res.statusCode).toBe(400);
+        });
+
+        it('deve aceitar nome com acentos', async () => {
+            const res = await request(app)
+                .post('/api/campeonatos')
+                .send({
+                    nome: 'Série A Brasileirão',
+                    temporada: '2025',
+                    equipe_ids: [criados.equipes[0], criados.equipes[1]],
+                });
+            expect(res.statusCode).toBe(201);
+            expect(res.body.nome).toBe('Série A Brasileirão');
+            criados.campeonatos.push(res.body.id);
+        });
+    });
+
+    describe('GET /api/campeonatos', () => {
+        it('deve listar campeonatos', async () => {
+            const res = await request(app).get('/api/campeonatos');
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+            expect(res.body.length).toBeGreaterThanOrEqual(2);
+        });
+    });
+
+    describe('GET /api/campeonatos/:id', () => {
+        it('deve buscar campeonato com equipes', async () => {
+            const res = await request(app).get(`/api/campeonatos/${criados.campeonatos[0]}`);
+            expect(res.statusCode).toBe(200);
+            expect(res.body.nome).toBe('Campeonato Teste');
+            expect(res.body.equipes).toBeDefined();
+            expect(res.body.equipes.length).toBe(2);
+        });
+
+        it('deve retornar 404 para campeonato inexistente', async () => {
+            const res = await request(app).get('/api/campeonatos/00000000-0000-0000-0000-000000000000');
+            expect(res.statusCode).toBe(404);
+        });
+    });
+
+    describe('PUT /api/campeonatos/:id', () => {
+        it('deve atualizar campeonato', async () => {
+            const res = await request(app)
+                .put(`/api/campeonatos/${criados.campeonatos[0]}`)
+                .send({
+                    nome: 'Campeonato Atualizado',
+                    temporada: '2026',
+                    equipe_ids: [criados.equipes[0], criados.equipes[1]],
+                });
+            expect(res.statusCode).toBe(200);
+            expect(res.body.nome).toBe('Campeonato Atualizado');
+        });
+
+        it('deve rejeitar nome vazio no update', async () => {
+            const res = await request(app)
+                .put(`/api/campeonatos/${criados.campeonatos[0]}`)
+                .send({
+                    nome: '',
+                    temporada: '2025',
+                    equipe_ids: [criados.equipes[0]],
+                });
+            expect(res.statusCode).toBe(400);
+        });
+    });
+});
+
+// ============================================================
 // JOGOS
 // ============================================================
 describe('JOGOS', () => {
     describe('POST /api/jogos', () => {
-        it('deve criar jogo válido', async () => {
+        it('deve criar jogo válido com campeonato', async () => {
             const res = await request(app)
                 .post('/api/jogos')
                 .send({
                     data: '2025-06-15',
                     hora: '16:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: 2,
@@ -564,7 +678,22 @@ describe('JOGOS', () => {
                 });
             expect(res.statusCode).toBe(201);
             expect(res.body.vencedor).toBe('equipe_a');
+            expect(res.body.campeonato_nome).toBeDefined();
             criados.jogos.push(res.body.id);
+        });
+
+        it('deve rejeitar sem campeonato', async () => {
+            const res = await request(app)
+                .post('/api/jogos')
+                .send({
+                    data: '2025-06-15',
+                    hora: '16:00',
+                    equipe_a_id: criados.equipes[0],
+                    equipe_b_id: criados.equipes[1],
+                    gols_equipe_a: 0,
+                    gols_equipe_b: 0,
+                });
+            expect(res.statusCode).toBe(400);
         });
 
         it('deve rejeitar mesma equipe', async () => {
@@ -573,6 +702,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-06-15',
                     hora: '16:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[0],
                     gols_equipe_a: 0,
@@ -588,6 +718,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-06-15',
                     hora: '16:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: -1,
@@ -602,6 +733,7 @@ describe('JOGOS', () => {
                 .post('/api/jogos')
                 .send({
                     hora: '16:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                 });
@@ -614,6 +746,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-07-20',
                     hora: '20:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: 1,
@@ -624,33 +757,64 @@ describe('JOGOS', () => {
             criados.jogos.push(res.body.id);
         });
 
-        it('deve rejeitar equipe inexistente', async () => {
+        it('deve rejeitar equipe que não pertence ao campeonato', async () => {
+            // Criar uma equipe que NÃO pertence ao campeonato
+            const eqRes = await request(app)
+                .post('/api/equipes')
+                .send({ nome: 'Equipe Fora', plano_ids: [criados.planos[0]] });
+            const equipeForaId = eqRes.body.id;
+            criados.equipes.push(equipeForaId);
+
             const res = await request(app)
                 .post('/api/jogos')
                 .send({
                     data: '2025-06-15',
                     hora: '16:00',
-                    equipe_a_id: '00000000-0000-0000-0000-000000000000',
+                    campeonato_id: criados.campeonatos[0],
+                    equipe_a_id: equipeForaId,
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: 0,
                     gols_equipe_b: 0,
                 });
             expect(res.statusCode).toBe(400);
-            expect(res.body.erro).toContain('não existe');
+            expect(res.body.erro).toContain('não pertence');
         });
     });
 
     describe('GET /api/jogos', () => {
-        it('deve listar jogos', async () => {
+        it('deve listar jogos com campeonato_nome', async () => {
             const res = await request(app).get('/api/jogos');
             expect(res.statusCode).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);
+            if (res.body.length > 0) {
+                expect(res.body[0]).toHaveProperty('campeonato_nome');
+            }
         });
 
         it('deve filtrar por equipe', async () => {
             const res = await request(app).get(`/api/jogos?equipe_id=${criados.equipes[0]}`);
             expect(res.statusCode).toBe(200);
             expect(Array.isArray(res.body)).toBe(true);
+        });
+
+        it('deve filtrar por campeonato', async () => {
+            const res = await request(app).get(`/api/jogos?campeonato_id=${criados.campeonatos[0]}`);
+            expect(res.statusCode).toBe(200);
+            expect(Array.isArray(res.body)).toBe(true);
+        });
+    });
+
+    describe('GET /api/jogos/:id', () => {
+        it('deve buscar jogo por id', async () => {
+            const res = await request(app).get(`/api/jogos/${criados.jogos[0]}`);
+            expect(res.statusCode).toBe(200);
+            expect(res.body.campeonato_nome).toBeDefined();
+            expect(res.body.vencedor).toBeDefined();
+        });
+
+        it('deve retornar 404 para jogo inexistente', async () => {
+            const res = await request(app).get('/api/jogos/00000000-0000-0000-0000-000000000000');
+            expect(res.statusCode).toBe(404);
         });
     });
 
@@ -661,6 +825,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-06-15',
                     hora: '18:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: 3,
@@ -676,6 +841,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-06-15',
                     hora: '18:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: -1,
@@ -691,6 +857,7 @@ describe('JOGOS', () => {
                 .send({
                     data: '2025-06-15',
                     hora: '18:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[0],
                     gols_equipe_a: 0,
@@ -706,6 +873,7 @@ describe('JOGOS', () => {
                 .send({
                     data: 'abc',
                     hora: '18:00',
+                    campeonato_id: criados.campeonatos[0],
                     equipe_a_id: criados.equipes[0],
                     equipe_b_id: criados.equipes[1],
                     gols_equipe_a: 0,
@@ -721,22 +889,27 @@ describe('JOGOS', () => {
 // EXCLUSÃO EM CASCATA
 // ============================================================
 describe('EXCLUSÃO EM CASCATA', () => {
+    it('não deve excluir plano com torcedores', async () => {
+        const res = await request(app).delete(`/api/planos/${criados.planos[0]}`);
+        expect(res.statusCode).toBe(409);
+        expect(res.body.erro).toContain('torcedores');
+    });
+
     it('não deve excluir equipe com torcedores', async () => {
         const res = await request(app).delete(`/api/equipes/${criados.equipes[0]}`);
         expect(res.statusCode).toBe(409);
         expect(res.body.erro).toContain('torcedores');
     });
 
-    it('não deve excluir equipe com jogos', async () => {
-        // equipes[1] tem jogos mas não torcedores
-        const res = await request(app).delete(`/api/equipes/${criados.equipes[1]}`);
+    it('não deve excluir campeonato com jogos', async () => {
+        const res = await request(app).delete(`/api/campeonatos/${criados.campeonatos[0]}`);
         expect(res.statusCode).toBe(409);
         expect(res.body.erro).toContain('jogos');
     });
 });
 
 // ============================================================
-// EXCLUSÃO (ordem certa: jogos -> torcedores -> equipes -> planos)
+// EXCLUSÃO (ordem certa: jogos -> torcedores -> campeonatos -> equipes -> planos)
 // ============================================================
 describe('EXCLUSÃO', () => {
     it('deve excluir jogo', async () => {
@@ -759,6 +932,14 @@ describe('EXCLUSÃO', () => {
         const depoisRes = await request(app).get(`/api/equipes/${criados.equipes[0]}`);
         expect(depoisRes.body.qtd_socios).toBeLessThan(sociosAntes);
         criados.torcedores = [];
+    });
+
+    it('deve excluir campeonato sem jogos', async () => {
+        for (const id of criados.campeonatos) {
+            const res = await request(app).delete(`/api/campeonatos/${id}`);
+            expect(res.statusCode).toBe(200);
+        }
+        criados.campeonatos = [];
     });
 
     it('deve excluir equipe sem dependências', async () => {
@@ -790,5 +971,8 @@ describe('EXCLUSÃO', () => {
 
         const resPlano = await request(app).delete(`/api/planos/${uuid}`);
         expect(resPlano.statusCode).toBe(404);
+
+        const resCampeonato = await request(app).delete(`/api/campeonatos/${uuid}`);
+        expect(resCampeonato.statusCode).toBe(404);
     });
 });

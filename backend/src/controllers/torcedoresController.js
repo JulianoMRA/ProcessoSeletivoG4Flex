@@ -9,7 +9,7 @@ exports.listar = async (req, res) => {
 
         const baseQuery = `
       SELECT t.*, 
-             e.nome AS equipe_nome, e.serie AS equipe_serie,
+             e.nome AS equipe_nome,
              p.nome AS plano_nome, p.valor AS plano_valor
       FROM torcedores t
       JOIN equipes e ON t.equipe_id = e.id
@@ -45,7 +45,7 @@ exports.buscarPorId = async (req, res) => {
 
         const result = await pool.query(`
       SELECT t.*, 
-             e.nome AS equipe_nome, e.serie AS equipe_serie,
+             e.nome AS equipe_nome,
              p.nome AS plano_nome, p.valor AS plano_valor
       FROM torcedores t
       JOIN equipes e ON t.equipe_id = e.id

@@ -550,6 +550,20 @@ class _JogoCard extends StatelessWidget {
                         color: cs.onSurfaceVariant,
                       ),
                     ),
+                    if (jogo.campeonatoNome != null) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          '• ${jogo.campeonatoNome}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.campeonatos,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
