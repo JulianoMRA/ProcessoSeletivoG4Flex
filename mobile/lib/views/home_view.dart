@@ -9,6 +9,7 @@ import 'package:fala_torcedor/views/jogos/jogos_list_view.dart';
 import 'package:fala_torcedor/views/planos/planos_list_view.dart';
 import 'package:fala_torcedor/views/torcedores/torcedores_list_view.dart';
 import 'package:fala_torcedor/views/campeonatos/campeonatos_list_view.dart';
+import 'package:fala_torcedor/views/relatorios/relatorios_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -185,6 +186,14 @@ class _HomeViewState extends State<HomeView>
             onTap: () {
               Navigator.pop(context);
               _navegarPara(context, const CampeonatosListView());
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.bar_chart_rounded,
+            label: 'Relatórios',
+            onTap: () {
+              Navigator.pop(context);
+              _navegarPara(context, const RelatoriosView());
             },
           ),
           const Divider(),
@@ -443,6 +452,20 @@ class _HomeViewState extends State<HomeView>
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const CampeonatosListView()),
+            );
+            _carregarContadores();
+          },
+        ),
+        const SizedBox(height: 16),
+        _MenuCard(
+          icon: Icons.bar_chart_rounded,
+          title: 'Relatórios',
+          subtitle: 'Visualizar estatísticas e gráficos',
+          gradient: [AppColors.relatorios, AppColors.relatoriosLight],
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RelatoriosView()),
             );
             _carregarContadores();
           },

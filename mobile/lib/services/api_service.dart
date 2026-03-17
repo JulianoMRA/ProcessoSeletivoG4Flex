@@ -351,4 +351,14 @@ class ApiService {
       throw Exception(_extrairErro(response, 'Erro ao excluir campeonato'));
     }
   }
+
+  // ======================= RELATÓRIOS =======================
+
+  Future<Map<String, dynamic>> getRelatorios() async {
+    final response = await http.get(Uri.parse('$baseUrl/relatorios'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    throw Exception(_extrairErro(response, 'Erro ao carregar relatórios'));
+  }
 }

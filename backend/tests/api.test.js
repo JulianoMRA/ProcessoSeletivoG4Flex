@@ -924,6 +924,33 @@ describe('JOGOS', () => {
 });
 
 // ============================================================
+// RELATÓRIOS
+// ============================================================
+describe('GET /api/relatorios', () => {
+    it('deve retornar os 3 datasets de relatórios', async () => {
+        const res = await request(app).get('/api/relatorios');
+        expect(res.statusCode).toBe(200);
+
+        expect(res.body.distribuicao_etaria).toBeDefined();
+        expect(res.body.distribuicao_etaria).toHaveProperty('jovens');
+        expect(res.body.distribuicao_etaria).toHaveProperty('adultos');
+        expect(res.body.distribuicao_etaria).toHaveProperty('idosos');
+
+        expect(Array.isArray(res.body.equipes_por_campeonato)).toBe(true);
+        if (res.body.equipes_por_campeonato.length > 0) {
+            expect(res.body.equipes_por_campeonato[0]).toHaveProperty('campeonato');
+            expect(res.body.equipes_por_campeonato[0]).toHaveProperty('total');
+        }
+
+        expect(Array.isArray(res.body.jogos_por_campeonato)).toBe(true);
+        if (res.body.jogos_por_campeonato.length > 0) {
+            expect(res.body.jogos_por_campeonato[0]).toHaveProperty('campeonato');
+            expect(res.body.jogos_por_campeonato[0]).toHaveProperty('total');
+        }
+    });
+});
+
+// ============================================================
 // EXCLUSÃO EM CASCATA
 // ============================================================
 describe('EXCLUSÃO EM CASCATA', () => {

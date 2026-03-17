@@ -39,6 +39,10 @@ class AppColors {
   static const campeonatos = Color(0xFFE67E22);
   static const campeonatosLight = Color(0xFFF0A04B);
 
+  // Relatórios
+  static const relatorios = Color(0xFF0EA5E9);
+  static const relatoriosLight = Color(0xFF38BDF8);
+
   // Status
   static const success = Color(0xFF43A047);
   static const error = Color(0xFFE53935);
