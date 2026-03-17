@@ -1,0 +1,348 @@
+# Fala, Torcedor! — Documentação Completa
+
+## Visão Geral
+
+Sistema de gestão de sócios-torcedores para clubes de futebol, com backend REST em **Node.js + Express + PostgreSQL**, frontend em **Flutter** (Android/iOS/Web), e uma aba de **relatórios estatísticos** com gráficos interativos.
+
+---
+
+## Arquitetura Geral
+
+```mermaid
+graph LR
+    A[Flutter App] -->|HTTP REST| B[Express API]
+    B -->|SQL via pg| C[(PostgreSQL)]
+    B -->|Middleware| D[Helmet + CORS + Rate Limit]
+```
+
+| Camada | Stack | Responsabilidade |
+|--------|-------|------------------|
+| Frontend | Flutter 3.x, Material 3, `fl_chart` | UI, navegação, gráficos |
+| Backend | Node.js, Express, `pg` | API REST, validação, transações |
+| Database | PostgreSQL 14+ | Persistência, integridade referencial |
+
+---
+
+## Modelo de Dados (ER)
+
+```mermaid
+erDiagram
+    EQUIPES ||--o{ EQUIPE_PLANOS : "tem"
+    PLANOS ||--o{ EQUIPE_PLANOS : "oferecido por"
+    EQUIPES ||--o{ TORCEDORES : "possui"
+    PLANOS ||--o{ TORCEDORES : "assinado por"
+    EQUIPES ||--o{ CAMPEONATO_EQUIPES : "participa"
+    CAMPEONATOS ||--o{ CAMPEONATO_EQUIPES : "inclui"
+    CAMPEONATOS ||--o{ JOGOS : "contém"
+    EQUIPES ||--o{ JOGOS : "equipe_a"
+    EQUIPES ||--o{ JOGOS : "equipe_b"
+
+    EQUIPES {
+        UUID id PK
+        TEXT nome
+        INT qtd_socios
+    }
+    PLANOS {
+        UUID id PK
+        TEXT nome
+        DECIMAL valor
+    }
+    EQUIPE_PLANOS {
+        UUID equipe_id FK
+        UUID plano_id FK
+    }
+    TORCEDORES {
+        UUID id PK
+        TEXT nome
+        TEXT cpf UK
+        DATE nascimento
+        UUID equipe_id FK
+        UUID plano_id FK
+    }
+    CAMPEONATOS {
+        UUID id PK
+        TEXT nome
+        TEXT temporada
+    }
+    CAMPEONATO_EQUIPES {
+        UUID campeonato_id FK
+        UUID equipe_id FK
+    }
+    JOGOS {
+        UUID id PK
+        DATE data
+        TIME hora
+        UUID campeonato_id FK
+        UUID equipe_a_id FK
+        UUID equipe_b_id FK
+        INT gols_equipe_a
+        INT gols_equipe_b
+    }
+```
+
+### Relacionamentos
+
+| Relação | Tipo | Tabela Pivot | Regra |
+|---------|------|-------------|-------|
+| Equipe ↔ Plano | N:M | `equipe_planos` | Uma equipe oferece múltiplos planos |
+| Equipe ↔ Campeonato | N:M | `campeonato_equipes` | Uma equipe participa de vários campeonatos |
+| Equipe → Torcedor | 1:N | — | Torcedor pertence a uma equipe |
+| Plano → Torcedor | 1:N | — | Torcedor assina um plano |
+| Campeonato → Jogo | 1:N | — | Jogo pertence a um campeonato |
+| Equipe → Jogo | 1:N ×2 | — | Jogo tem equipe_a e equipe_b (CHECK: `equipe_a_id != equipe_b_id`) |
+
+### Proteção de exclusão
+
+```
+Plano  → Tem torcedores? → 409 (bloqueado)
+Equipe → Tem torcedores? → 409 | Tem jogos? → 409
+Campeonato → Tem jogos? → 409
+```
+
+---
+
+## API (Backend)
+
+### Estrutura de diretórios
+
+```
+backend/src/
+├── config/database.js       # Pool PostgreSQL (UTF-8)
+├── controllers/
+│   ├── planosController.js       # CRUD Planos
+│   ├── equipesController.js      # CRUD Equipes (+ campeonato_ids)
+│   ├── torcedoresController.js   # CRUD Torcedores (+ CPF validation)
+│   ├── campeonatosController.js  # CRUD Campeonatos (+ equipe_ids)
+│   ├── jogosController.js        # CRUD Jogos (+ validação campeonato)
+│   └── relatoriosController.js   # 7 queries agregadas paralelas
+├── middleware/validateUUID.js    # Rejeita IDs inválidos (400)
+├── routes/                      # 1 arquivo por entidade
+│   ├── planos.js
+│   ├── equipes.js
+│   ├── torcedores.js
+│   ├── campeonatos.js
+│   ├── jogos.js
+│   └── relatorios.js
+└── server.js                    # Entry + Helmet + CORS + Rate Limit
+```
+
+### Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| **Equipes** | | |
+| GET | `/api/equipes` | Listar (paginação) |
+| GET | `/api/equipes/:id` | Buscar por ID (+ planos + campeonatos) |
+| POST | `/api/equipes` | Criar (com `plano_ids`, `campeonato_ids`) |
+| PUT | `/api/equipes/:id` | Atualizar |
+| DELETE | `/api/equipes/:id` | Excluir (protege dependências) |
+| **Planos** | | |
+| GET | `/api/planos` | Listar (filtro `?equipe_id=`) |
+| GET | `/api/planos/:id` | Buscar por ID (+ equipes) |
+| POST | `/api/planos` | Criar |
+| PUT | `/api/planos/:id` | Atualizar |
+| DELETE | `/api/planos/:id` | Excluir (protege dependências) |
+| **Torcedores** | | |
+| GET | `/api/torcedores` | Listar (JOINs equipe + plano) |
+| GET | `/api/torcedores/:id` | Buscar por ID |
+| GET | `/api/torcedores/verificar-cpf` | Verificar CPF único |
+| POST | `/api/torcedores` | Criar (valida CPF 11 dígitos) |
+| PUT | `/api/torcedores/:id` | Atualizar |
+| DELETE | `/api/torcedores/:id` | Excluir (decrementa `qtd_socios`) |
+| **Campeonatos** | | |
+| GET | `/api/campeonatos` | Listar (com equipes JSON) |
+| GET | `/api/campeonatos/:id` | Buscar por ID (+ equipes) |
+| POST | `/api/campeonatos` | Criar (mín. 2 `equipe_ids`) |
+| PUT | `/api/campeonatos/:id` | Atualizar |
+| DELETE | `/api/campeonatos/:id` | Excluir (protege dependências) |
+| **Jogos** | | |
+| GET | `/api/jogos` | Listar (filtro `?equipe_id=`, `?campeonato_id=`) |
+| GET | `/api/jogos/:id` | Buscar por ID |
+| POST | `/api/jogos` | Criar (valida gols ≥ 0, equipes no campeonato) |
+| PUT | `/api/jogos/:id` | Atualizar |
+| DELETE | `/api/jogos/:id` | Excluir |
+| **Utilitários** | | |
+| GET | `/api/health` | Status da API |
+| GET | `/api/contadores` | Totais de cada entidade |
+| GET | `/api/relatorios` | 7 relatórios estatísticos agregados |
+
+### Fluxo: Criação de Equipe (com transação)
+
+```mermaid
+sequenceDiagram
+    participant F as Flutter
+    participant A as API
+    participant DB as PostgreSQL
+
+    F->>A: POST /api/equipes {nome, plano_ids, campeonato_ids}
+    A->>A: Validar campos (nome, plano_ids)
+    A->>DB: BEGIN
+    A->>DB: INSERT INTO equipes
+    loop Para cada plano_id
+        A->>DB: INSERT INTO equipe_planos
+    end
+    loop Para cada campeonato_id (opcional)
+        A->>DB: INSERT INTO campeonato_equipes
+    end
+    A->>DB: COMMIT
+    A->>DB: SELECT planos da equipe
+    A->>DB: SELECT campeonatos da equipe
+    A-->>F: 201 {equipe + planos + campeonatos}
+```
+
+### Fluxo: Relatórios (7 queries paralelas)
+
+```mermaid
+sequenceDiagram
+    participant F as Flutter
+    participant A as API
+    participant DB as PostgreSQL
+
+    F->>A: GET /api/relatorios
+    par Paralelo via Promise.all
+        A->>DB: Distribuição etária (jovens/adultos/idosos)
+        A->>DB: Equipes por campeonato (+ nomes)
+        A->>DB: Jogos por campeonato (+ total gols)
+        A->>DB: KPIs (totais + média idade)
+        A->>DB: Desempenho por equipe (V/E/D + saldo)
+        A->>DB: Torcedores por equipe
+        A->>DB: Torcedores por plano
+    end
+    A-->>F: 200 {kpis, distribuicao_etaria, equipes_por_campeonato, jogos_por_campeonato, desempenho_equipes, torcedores_por_equipe, torcedores_por_plano}
+```
+
+---
+
+## Frontend (Flutter)
+
+### Estrutura
+
+```
+mobile/lib/
+├── main.dart                      # Entry point + ThemeData
+├── core/
+│   ├── colors.dart                # Cores do design system
+│   ├── theme.dart                 # Dark mode + Material 3
+│   ├── snackbar_helper.dart       # Snackbars padronizados
+│   ├── empty_state.dart           # Widget para listas vazias
+│   ├── staggered_list_item.dart   # Animação de entrada na lista
+│   └── shimmer_loading.dart       # Skeleton loading
+├── controllers/                   # ChangeNotifier para cada entidade
+├── models/                        # Classes: Equipe, Plano, Torcedor, Campeonato, Jogo
+├── services/
+│   └── api_service.dart           # HTTP client centralizado
+└── views/
+    ├── splash_view.dart           # Splash animada
+    ├── home_view.dart             # Dashboard + Drawer + Cards de navegação
+    ├── equipes/                   # Lista, Form, Detail
+    ├── planos/                    # Lista, Form, Detail
+    ├── torcedores/                # Lista, Form, Detail (+ filtros + ordenação)
+    ├── campeonatos/               # Lista, Form, Detail
+    ├── jogos/                     # Lista, Form, Detail
+    └── relatorios/
+        └── relatorios_view.dart   # KPIs + 5 relatórios + desempenho
+```
+
+### Navegação
+
+```mermaid
+graph TD
+    S[SplashView] -->|auto 1.8s| H[HomeView]
+    H --> E[Equipes]
+    H --> P[Planos]
+    H --> T[Torcedores]
+    H --> C[Campeonatos]
+    H --> J[Jogos]
+    H --> R[Relatórios]
+    E --> EF[Formulário Equipe]
+    E --> ED[Detalhe Equipe]
+    T --> TF[Formulário Torcedor]
+    T --> TD[Detalhe Torcedor]
+```
+
+### Relatórios (relatorios_view.dart)
+
+A tela exibe:
+
+1. **KPI Cards** — Total torcedores, Média de idade, Total gols, Total jogos
+2. **Toggle Pizza/Barras/Lista** — `SegmentedButton` com `AnimatedSwitcher`
+3. **Distribuição Etária** — Jovens (<20), Adultos (20-59), Idosos (60+)
+4. **Equipes por Campeonato** — Com nomes das equipes nos tooltips e na lista
+5. **Jogos por Campeonato** — Com total de gols nos tooltips
+6. **Torcedores por Equipe** — Distribuição de sócios por clube
+7. **Torcedores por Plano** — Distribuição por tier (Bronze, Prata, etc.)
+8. **Desempenho por Equipe** — V/E/D em chips coloridos + saldo de gols
+
+---
+
+## Segurança
+
+| Proteção | Implementação |
+|----------|--------------|
+| Headers | `helmet()` — X-Content-Type-Options, CSP, etc. |
+| CORS | `cors()` — Permite origens cruzadas |
+| Rate Limiting | 500 req/15min por IP |
+| Body Size | Máximo 1MB (`express.json({limit: '1mb'})`) |
+| UUID Validation | Middleware rejeita IDs inválidos com 400 |
+| SQL Injection | Queries parametrizadas (`$1, $2...`) |
+| Transações | BEGIN/COMMIT/ROLLBACK para operações multi-tabela |
+| Cascade Protection | Validação prévia antes de exclusão |
+| CPF Validation | 11 dígitos, unicidade, sanitização |
+| UTF-8 | `client_encoding` no PG + charset nas respostas |
+
+---
+
+## Testes
+
+**87 testes automatizados** com Jest + Supertest:
+
+| Categoria | Testes |
+|-----------|--------|
+| Health + Contadores | 2 |
+| Validação UUID | 2 |
+| CRUD Planos | 14 |
+| CRUD Equipes | 12 |
+| CRUD Torcedores | 18 |
+| CRUD Campeonatos | 10 |
+| Equipes + Campeonatos | 3 |
+| CRUD Jogos | 16 |
+| Relatórios | 1 |
+| Exclusão em Cascata | 3 |
+| Exclusão + Cleanup | 6 |
+| **Total** | **87** |
+
+---
+
+## Seed Data
+
+O arquivo [database/seed.sql](file:///c:/Users/julia/OneDrive/Documentos/GitHub/ProcessoSeletivoG4Flex/database/seed.sql) popula o banco com dados realistas:
+
+| Entidade | Quantidade | Destaque |
+|----------|-----------|----------|
+| Equipes | 8 | Flamengo, Palmeiras, São Paulo, Corinthians, Fortaleza, etc. |
+| Planos | 5 | Bronze (R$29,90) → Diamante (R$199,90) |
+| Torcedores | 25 | 6 jovens, 14 adultos, 5 idosos |
+| Campeonatos | 4 | Séries A/B, Copa do Brasil, Copa do Nordeste |
+| Jogos | 15 | Distribuídos entre os 4 campeonatos |
+
+---
+
+## Como Executar
+
+```bash
+# 1. Database
+createdb fala_torcedor
+psql -d fala_torcedor -f database/schema.sql
+psql -d fala_torcedor -f database/seed.sql
+
+# 2. Backend
+cd backend && cp .env.example .env
+npm install && npm run dev    # http://localhost:3000
+
+# 3. Mobile
+cd mobile && flutter pub get
+flutter run -d chrome         # ou flutter run (Android)
+
+# 4. Testes
+cd backend && npm test        # 87 testes
+```

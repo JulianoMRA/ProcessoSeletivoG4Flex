@@ -29,6 +29,8 @@ class _RelatoriosViewState extends State<RelatoriosView> {
   List<Map<String, dynamic>> _equipesCamp = [];
   List<Map<String, dynamic>> _jogosCamp = [];
   List<Map<String, dynamic>> _desempenho = [];
+  List<Map<String, dynamic>> _torcEquipes = [];
+  List<Map<String, dynamic>> _torcPlanos = [];
 
   final _coresEtaria = [
     const Color(0xFF4CAF50),
@@ -45,6 +47,14 @@ class _RelatoriosViewState extends State<RelatoriosView> {
     const Color(0xFFEF4444),
     const Color(0xFF6366F1),
     const Color(0xFF14B8A6),
+  ];
+
+  final _coresPlano = [
+    const Color(0xFFCD7F32),
+    const Color(0xFFC0C0C0),
+    const Color(0xFFFFD700),
+    const Color(0xFFE5E4E2),
+    const Color(0xFFB9F2FF),
   ];
 
   @override
@@ -105,6 +115,22 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                 'derrotas': (e['derrotas'] as num).toInt(),
                 'gols_pro': (e['gols_pro'] as num).toInt(),
                 'gols_contra': (e['gols_contra'] as num).toInt(),
+              })
+          .toList();
+
+      // Torcedores por equipe
+      _torcEquipes = (data['torcedores_por_equipe'] as List)
+          .map((e) => {
+                'label': e['equipe'] as String,
+                'total': (e['total'] as num).toInt(),
+              })
+          .toList();
+
+      // Torcedores por plano
+      _torcPlanos = (data['torcedores_por_plano'] as List)
+          .map((e) => {
+                'label': e['plano'] as String,
+                'total': (e['total'] as num).toInt(),
               })
           .toList();
     } catch (e) {
@@ -175,6 +201,22 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                           cor: AppColors.jogos,
                           dados: _jogosCamp,
                           cores: _coresCampeonato,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildRelatorio(
+                          titulo: 'Torcedores por Equipe',
+                          icone: Icons.groups_rounded,
+                          cor: AppColors.secondary,
+                          dados: _torcEquipes,
+                          cores: _coresCampeonato,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildRelatorio(
+                          titulo: 'Torcedores por Plano',
+                          icone: Icons.card_membership_rounded,
+                          cor: AppColors.accent,
+                          dados: _torcPlanos,
+                          cores: _coresPlano,
                         ),
                         const SizedBox(height: 20),
                         _buildDesempenho(),
@@ -790,10 +832,6 @@ class _RelatoriosViewState extends State<RelatoriosView> {
     final gp = d['gols_pro'] as int;
     final gc = d['gols_contra'] as int;
     final saldo = gp - gc;
-    final pontos = v * 3 + e;
-
-    // Barra de aproveitamento
-    final aproveitamento = jogos > 0 ? (pontos / (jogos * 3) * 100) : 0.0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -816,15 +854,15 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: AppColors.jogos.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '$pontos pts',
+                  '$jogos jogos',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+                    color: AppColors.jogos,
                   ),
                 ),
               ),
@@ -861,34 +899,7 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                 ),
               ),
               const Spacer(),
-              Text(
-                '${aproveitamento.toStringAsFixed(0)}%',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
             ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: aproveitamento / 100,
-              minHeight: 4,
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .outlineVariant
-                  .withValues(alpha: 0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                aproveitamento >= 60
-                    ? AppColors.success
-                    : aproveitamento >= 40
-                        ? AppColors.warning
-                        : AppColors.error,
-              ),
-            ),
           ),
         ],
       ),

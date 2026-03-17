@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 exports.obterRelatorios = async (req, res) => {
     try {
-        const [etaria, equipesCamp, jogosCamp, kpis, desempenho] = await Promise.all([
+        const [etaria, equipesCamp, jogosCamp, kpis, desempenho, torcEquipes, torcPlanos] = await Promise.all([
             // 1. Distribuição etária
             pool.query(`
                 SELECT
@@ -90,6 +90,23 @@ exports.obterRelatorios = async (req, res) => {
                     ) DESC,
                     e.nome
             `),
+            // 6. Torcedores por equipe
+            pool.query(`
+                SELECT e.nome AS equipe, COUNT(t.id)::int AS total
+                FROM equipes e
+                LEFT JOIN torcedores t ON e.id = t.equipe_id
+                GROUP BY e.id, e.nome
+                ORDER BY total DESC, e.nome
+            `),
+
+            // 7. Torcedores por plano
+            pool.query(`
+                SELECT p.nome AS plano, p.valor, COUNT(t.id)::int AS total
+                FROM planos p
+                LEFT JOIN torcedores t ON p.id = t.plano_id
+                GROUP BY p.id, p.nome, p.valor
+                ORDER BY p.valor
+            `),
         ]);
 
         res.json({
@@ -98,6 +115,8 @@ exports.obterRelatorios = async (req, res) => {
             equipes_por_campeonato: equipesCamp.rows,
             jogos_por_campeonato: jogosCamp.rows,
             desempenho_equipes: desempenho.rows,
+            torcedores_por_equipe: torcEquipes.rows,
+            torcedores_por_plano: torcPlanos.rows,
         });
     } catch (err) {
         console.error('Erro ao gerar relatórios:', err.message);
