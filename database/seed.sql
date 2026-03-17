@@ -58,27 +58,27 @@ WHERE e.nome = 'Fortaleza' AND p.nome IN ('Bronze', 'Prata', 'Ouro', 'Platina');
 
 -- === JOVENS (< 20 anos — nascidos após 2006-03-17) ===
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Matheus Oliveira', '11111111111', '2008-06-12', e.id, p.id
+SELECT 'Matheus Oliveira', '91111111111', '2008-06-12', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Flamengo' AND p.nome = 'Bronze';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Larissa Santos', '22222222222', '2009-01-20', e.id, p.id
+SELECT 'Larissa Santos', '92222222222', '2009-01-20', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Palmeiras' AND p.nome = 'Bronze';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Gabriel Ferreira', '33333333333', '2007-09-05', e.id, p.id
+SELECT 'Gabriel Ferreira', '93333333333', '2007-09-05', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Corinthians' AND p.nome = 'Prata';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Isabela Costa', '44444444444', '2010-03-15', e.id, p.id
+SELECT 'Isabela Costa', '94444444444', '2010-03-15', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'São Paulo' AND p.nome = 'Bronze';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Lucas Mendes', '55555555555', '2008-11-28', e.id, p.id
+SELECT 'Lucas Mendes', '95555555555', '2008-11-28', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Fortaleza' AND p.nome = 'Prata';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Rafaela Lima', '66666666666', '2007-04-10', e.id, p.id
+SELECT 'Rafaela Lima', '96666666666', '2007-04-10', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Sport Recife' AND p.nome = 'Bronze';
 
 -- === ADULTOS (20–59 anos — nascidos 1967–2006) ===
@@ -123,36 +123,36 @@ SELECT 'Ricardo Barbosa', '01234567890', '1996-08-20', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Aparecidense' AND p.nome = 'Ouro';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Thiago Nascimento', '10101010101', '1978-02-14', e.id, p.id
+SELECT 'Thiago Nascimento', '91010101010', '1978-02-14', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Corinthians' AND p.nome = 'Ouro';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Camila Rodrigues', '20202020202', '1991-10-30', e.id, p.id
+SELECT 'Camila Rodrigues', '92020202020', '1991-10-30', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Fortaleza' AND p.nome = 'Ouro';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Bruno Carvalho', '30303030303', '1975-07-22', e.id, p.id
+SELECT 'Bruno Carvalho', '93030303030', '1975-07-22', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Fortaleza' AND p.nome = 'Platina';
 
 -- === IDOSOS (≥ 60 anos — nascidos antes de 1966) ===
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Antônio Pereira', '40404040404', '1955-03-08', e.id, p.id
+SELECT 'Antônio Pereira', '94040404040', '1955-03-08', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Flamengo' AND p.nome = 'Diamante';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Maria das Graças', '50505050505', '1950-12-01', e.id, p.id
+SELECT 'Maria das Graças', '95050505050', '1950-12-01', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Palmeiras' AND p.nome = 'Prata';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'José de Souza', '60606060606', '1958-08-25', e.id, p.id
+SELECT 'José de Souza', '96060606060', '1958-08-25', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'São Paulo' AND p.nome = 'Ouro';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Francisca Moreira', '70707070707', '1948-05-17', e.id, p.id
+SELECT 'Francisca Moreira', '97070707070', '1948-05-17', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Corinthians' AND p.nome = 'Platina';
 
 INSERT INTO torcedores (nome, cpf, nascimento, equipe_id, plano_id)
-SELECT 'Sebastião Nunes', '80808080808', '1960-11-03', e.id, p.id
+SELECT 'Sebastião Nunes', '98080808080', '1960-11-03', e.id, p.id
 FROM equipes e, planos p WHERE e.nome = 'Sport Recife' AND p.nome = 'Prata';
 
 -- Atualizar qtd_socios
