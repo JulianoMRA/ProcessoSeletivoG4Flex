@@ -80,6 +80,8 @@ exports.criar = async (req, res) => {
         return res.status(400).json({ erro: 'Selecione pelo menos um plano' });
     }
 
+    const campeonato_ids = req.body.campeonato_ids;
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -98,6 +100,15 @@ exports.criar = async (req, res) => {
             );
         }
 
+        if (Array.isArray(campeonato_ids) && campeonato_ids.length > 0) {
+            for (const campId of campeonato_ids) {
+                await client.query(
+                    'INSERT INTO campeonato_equipes (campeonato_id, equipe_id) VALUES ($1, $2)',
+                    [campId, equipeId]
+                );
+            }
+        }
+
         await client.query('COMMIT');
 
         const planos = await pool.query(
@@ -107,11 +118,18 @@ exports.criar = async (req, res) => {
              ORDER BY p.valor`, [equipeId]
         );
 
-        res.status(201).json({ ...equipe.rows[0], planos: planos.rows });
+        const campeonatos = await pool.query(
+            `SELECT c.* FROM campeonatos c
+             JOIN campeonato_equipes ce ON c.id = ce.campeonato_id
+             WHERE ce.equipe_id = $1
+             ORDER BY c.temporada DESC, c.nome`, [equipeId]
+        );
+
+        res.status(201).json({ ...equipe.rows[0], planos: planos.rows, campeonatos: campeonatos.rows });
     } catch (err) {
         await client.query('ROLLBACK');
         if (err.code === '23503') {
-            return res.status(400).json({ erro: 'Plano informado não existe' });
+            return res.status(400).json({ erro: 'Plano ou campeonato informado não existe' });
         }
         console.error('Erro ao criar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao criar equipe' });
@@ -122,7 +140,7 @@ exports.criar = async (req, res) => {
 
 exports.atualizar = async (req, res) => {
     const { id } = req.params;
-    const { nome, plano_ids } = req.body;
+    const { nome, plano_ids, campeonato_ids } = req.body;
 
     const nomeTrimmed = (nome || '').trim();
 
@@ -158,6 +176,17 @@ exports.atualizar = async (req, res) => {
             }
         }
 
+        if (Array.isArray(campeonato_ids)) {
+            await client.query('DELETE FROM campeonato_equipes WHERE equipe_id = $1', [id]);
+
+            for (const campId of campeonato_ids) {
+                await client.query(
+                    'INSERT INTO campeonato_equipes (campeonato_id, equipe_id) VALUES ($1, $2)',
+                    [campId, id]
+                );
+            }
+        }
+
         await client.query('COMMIT');
 
         const planos = await pool.query(
@@ -167,11 +196,18 @@ exports.atualizar = async (req, res) => {
              ORDER BY p.valor`, [id]
         );
 
-        res.json({ ...resultado.rows[0], planos: planos.rows });
+        const campeonatos = await pool.query(
+            `SELECT c.* FROM campeonatos c
+             JOIN campeonato_equipes ce ON c.id = ce.campeonato_id
+             WHERE ce.equipe_id = $1
+             ORDER BY c.temporada DESC, c.nome`, [id]
+        );
+
+        res.json({ ...resultado.rows[0], planos: planos.rows, campeonatos: campeonatos.rows });
     } catch (err) {
         await client.query('ROLLBACK');
         if (err.code === '23503') {
-            return res.status(400).json({ erro: 'Plano informado não existe' });
+            return res.status(400).json({ erro: 'Plano ou campeonato informado não existe' });
         }
         console.error('Erro ao atualizar equipe:', err.message);
         res.status(500).json({ erro: 'Erro ao atualizar equipe' });

@@ -660,6 +660,44 @@ describe('CAMPEONATOS', () => {
 });
 
 // ============================================================
+// EQUIPES + CAMPEONATOS (integração)
+// ============================================================
+describe('EQUIPES + CAMPEONATOS', () => {
+    it('GET /api/equipes/:id deve retornar campeonatos vinculados', async () => {
+        const res = await request(app).get(`/api/equipes/${criados.equipes[0]}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.campeonatos).toBeDefined();
+        expect(Array.isArray(res.body.campeonatos)).toBe(true);
+        expect(res.body.campeonatos.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('deve atualizar equipe com campeonato_ids', async () => {
+        const res = await request(app)
+            .put(`/api/equipes/${criados.equipes[0]}`)
+            .send({
+                nome: 'Equipe A Com Campeonatos',
+                plano_ids: [criados.planos[0]],
+                campeonato_ids: [criados.campeonatos[0], criados.campeonatos[1]],
+            });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.campeonatos).toBeDefined();
+        expect(res.body.campeonatos.length).toBe(2);
+    });
+
+    it('deve criar equipe com campeonato_ids', async () => {
+        const res = await request(app)
+            .post('/api/equipes')
+            .send({
+                nome: 'Equipe Com Campeonato',
+                plano_ids: [criados.planos[0]],
+                campeonato_ids: [criados.campeonatos[0]],
+            });
+        expect(res.statusCode).toBe(201);
+        expect(res.body.campeonatos).toBeDefined();
+        expect(res.body.campeonatos.length).toBe(1);
+        criados.equipes.push(res.body.id);
+    });
+});
 // JOGOS
 // ============================================================
 describe('JOGOS', () => {

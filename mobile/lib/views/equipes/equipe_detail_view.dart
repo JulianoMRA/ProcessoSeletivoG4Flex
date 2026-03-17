@@ -125,6 +125,8 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
             _buildJogosStats(),
             const SizedBox(height: 24),
             _buildPlanos(context),
+            const SizedBox(height: 24),
+            _buildCampeonatos(context),
           ],
         ),
       ),
@@ -411,6 +413,110 @@ class _EquipeDetailViewState extends State<EquipeDetailView> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCampeonatos(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Campeonatos',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_carregando)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (_equipe.campeonatos.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'Nenhum campeonato vinculado',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          )
+        else
+          ..._equipe.campeonatos.map(
+            (camp) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.campeonatos.withValues(alpha: 0.8),
+                        AppColors.campeonatosLight,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.emoji_events_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  camp.nome,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.campeonatos.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    camp.temporada,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.campeonatos,
+                    ),
                   ),
                 ),
               ),

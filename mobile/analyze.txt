@@ -1,12 +1,2 @@
 Analyzing mobile...                                             
-
-  error - Too many positional arguments: 0 expected, but 1 found - lib\views\jogos\jogo_form_view.dart:274:1 - extra_positional_arguments_could_be_named
-  error - Invalid constant value - lib\views\jogos\jogo_form_view.dart:274:36 - invalid_constant
-  error - Undefined name 'labelText' - lib\views\jogos\jogo_form_view.dart:274:36 - undefined_identifier
-  error - Expected to find ')' - lib\views\jogos\jogo_form_view.dart:274:45 - expected_token
-  error - Too many positional arguments: 0 expected, but 1 found - lib\views\jogos\jogo_form_view.dart:301:1 - extra_positional_arguments_could_be_named
-  error - Invalid constant value - lib\views\jogos\jogo_form_view.dart:301:36 - invalid_constant
-  error - Undefined name 'labelText' - lib\views\jogos\jogo_form_view.dart:301:36 - undefined_identifier
-  error - Expected to find ')' - lib\views\jogos\jogo_form_view.dart:301:45 - expected_token
-
-8 issues found. (ran in 1.9s)
+No issues found! (ran in 2.6s)

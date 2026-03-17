@@ -41,11 +41,14 @@ class ApiService {
     throw Exception(_extrairErro(response, 'Erro ao buscar equipe'));
   }
 
-  Future<Equipe> createEquipe(Equipe equipe, List<String> planoIds) async {
-    final body = {
+  Future<Equipe> createEquipe(Equipe equipe, List<String> planoIds, {List<String>? campeonatoIds}) async {
+    final body = <String, dynamic>{
       'nome': equipe.nome,
       'plano_ids': planoIds,
     };
+    if (campeonatoIds != null) {
+      body['campeonato_ids'] = campeonatoIds;
+    }
 
     final response = await http.post(
       Uri.parse('$baseUrl/equipes'),
@@ -64,11 +67,15 @@ class ApiService {
     String id,
     Equipe equipe,
     List<String> planoIds,
+    {List<String>? campeonatoIds}
   ) async {
-    final body = {
+    final body = <String, dynamic>{
       'nome': equipe.nome,
       'plano_ids': planoIds,
     };
+    if (campeonatoIds != null) {
+      body['campeonato_ids'] = campeonatoIds;
+    }
 
     final response = await http.put(
       Uri.parse('$baseUrl/equipes/$id'),

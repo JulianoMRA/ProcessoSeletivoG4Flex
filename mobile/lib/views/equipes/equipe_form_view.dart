@@ -4,6 +4,7 @@ import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/core/snackbar.dart';
 import 'package:fala_torcedor/models/equipe.dart';
 import 'package:fala_torcedor/models/plano.dart';
+import 'package:fala_torcedor/models/campeonato.dart';
 import 'package:fala_torcedor/services/api_service.dart';
 import 'package:intl/intl.dart';
 
@@ -30,6 +31,9 @@ class _EquipeFormViewState extends State<EquipeFormView> {
   List<Plano> _todosPlanos = [];
   final Set<String> _planosSelecionados = {};
 
+  List<Campeonato> _todosCampeonatos = [];
+  final Set<String> _campeonatosSelecionados = {};
+
   bool get _editando => widget.equipe != null;
 
   @override
@@ -45,12 +49,20 @@ class _EquipeFormViewState extends State<EquipeFormView> {
 
   Future<void> _carregarDados() async {
     try {
-      _todosPlanos = await _api.getPlanos();
+      final resultados = await Future.wait([
+        _api.getPlanos(),
+        _api.getCampeonatos(),
+      ]);
+      _todosPlanos = resultados[0] as List<Plano>;
+      _todosCampeonatos = resultados[1] as List<Campeonato>;
 
       if (_editando) {
         final equipeCompleta = await _api.getEquipeById(widget.equipe!.id!);
         for (final plano in equipeCompleta.planos) {
           _planosSelecionados.add(plano.id!);
+        }
+        for (final camp in equipeCompleta.campeonatos) {
+          _campeonatosSelecionados.add(camp.id!);
         }
       }
     } catch (e) {
@@ -86,16 +98,22 @@ class _EquipeFormViewState extends State<EquipeFormView> {
     );
 
     bool sucesso;
+    final campIds = _campeonatosSelecionados.isNotEmpty
+        ? _campeonatosSelecionados.toList()
+        : <String>[];
+
     if (_editando) {
       sucesso = await _controller.atualizarEquipe(
         widget.equipe!.id!,
         equipe,
         _planosSelecionados.toList(),
+        campeonatoIds: campIds,
       );
     } else {
       sucesso = await _controller.criarEquipe(
         equipe,
         _planosSelecionados.toList(),
+        campeonatoIds: campIds.isNotEmpty ? campIds : null,
       );
     }
 
@@ -246,7 +264,6 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                             ? 'Informe o nome'
                             : null,
                       ),
-                      const SizedBox(height: 16),
                       const SizedBox(height: 28),
                       _buildSectionTitle('Planos de sócio'),
                       const SizedBox(height: 4),
@@ -265,6 +282,18 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                         icon: const Icon(Icons.add, size: 18),
                         label: const Text('Criar novo plano'),
                       ),
+                      const SizedBox(height: 28),
+                      _buildSectionTitle('Campeonatos'),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Selecione os campeonatos em que a equipe participa (opcional)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCampeonatosSelection(),
                       const SizedBox(height: 32),
                       FilledButton(
                         onPressed: _salvando ? null : _salvar,
@@ -337,6 +366,60 @@ class _EquipeFormViewState extends State<EquipeFormView> {
                 _planosSelecionados.add(plano.id!);
               } else {
                 _planosSelecionados.remove(plano.id!);
+              }
+              _modificado = true;
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildCampeonatosSelection() {
+    if (_todosCampeonatos.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Text(
+              'Nenhum campeonato cadastrado.',
+              style: TextStyle(color: Theme.of(context).hintColor),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _todosCampeonatos.map((camp) {
+        final selecionado = _campeonatosSelecionados.contains(camp.id);
+        return FilterChip(
+          avatar: Icon(
+            Icons.emoji_events_rounded,
+            size: 18,
+            color: selecionado
+                ? AppColors.campeonatos
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          label: Text('${camp.nome} ${camp.temporada}'),
+          selected: selecionado,
+          showCheckmark: true,
+          selectedColor: AppColors.campeonatos.withValues(alpha: 0.15),
+          checkmarkColor: AppColors.campeonatos,
+          labelStyle: TextStyle(
+            fontWeight: selecionado ? FontWeight.w600 : FontWeight.w400,
+            color: selecionado
+                ? AppColors.campeonatos
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _campeonatosSelecionados.add(camp.id!);
+              } else {
+                _campeonatosSelecionados.remove(camp.id!);
               }
               _modificado = true;
             });
