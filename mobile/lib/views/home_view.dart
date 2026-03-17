@@ -86,16 +86,16 @@ class _HomeViewState extends State<HomeView>
             opacity: _fadeAnim,
             child: SlideTransition(
               position: _slideAnim,
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 40),
                     _buildHeader(ctx),
-                    const Spacer(),
+                    const SizedBox(height: 24),
                     _buildMenuCards(context),
-                    const Spacer(flex: 2),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
