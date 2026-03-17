@@ -236,11 +236,25 @@ class _RelatoriosViewState extends State<RelatoriosView> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'Nenhum dado disponível',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.insert_chart_outlined_rounded,
+                        size: 40,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Nenhum dado disponível',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               )
@@ -257,14 +271,24 @@ class _RelatoriosViewState extends State<RelatoriosView> {
     List<Color> cores,
     int total,
   ) {
+    Widget child;
     switch (_tipo) {
       case TipoVisualizacao.pizza:
-        return _buildPieChart(dados, cores, total);
+        child = _buildPieChart(dados, cores, total);
       case TipoVisualizacao.barras:
-        return _buildBarChart(dados, cores);
+        child = _buildBarChart(dados, cores);
       case TipoVisualizacao.lista:
-        return _buildListView(dados, cores, total);
+        child = _buildListView(dados, cores, total);
     }
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: KeyedSubtree(
+        key: ValueKey(_tipo),
+        child: child,
+      ),
+    );
   }
 
   Widget _buildPieChart(
@@ -372,9 +396,15 @@ class _RelatoriosViewState extends State<RelatoriosView> {
                       final idx = value.toInt();
                       if (idx >= 0 && idx < dados.length) {
                         final label = dados[idx]['label'] as String;
-                        final short = label.length > 8
-                            ? '${label.substring(0, 7)}…'
-                            : label;
+                        final words = label.split(' ');
+                        String short;
+                        if (label.length <= 10) {
+                          short = label;
+                        } else if (words.length >= 2) {
+                          short = words.first;
+                        } else {
+                          short = '${label.substring(0, 9)}…';
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(

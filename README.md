@@ -9,9 +9,9 @@ ProcessoSeletivoG4Flex/
 ├── backend/              # API Node.js + Express + PostgreSQL
 │   └── src/
 │       ├── config/       # Conexão com banco de dados (UTF-8)
-│       ├── controllers/  # Lógica de negócio (5 controllers)
+│       ├── controllers/  # Lógica de negócio (6 controllers)
 │       ├── middleware/    # Validação de UUID
-│       ├── routes/       # Rotas da API (5 entidades)
+│       ├── routes/       # Rotas da API (6 entidades)
 │       └── server.js     # Entrada + middlewares de segurança
 │   └── tests/            # Testes automatizados (Jest + Supertest)
 ├── mobile/               # App Flutter (Android/iOS/Web)
@@ -20,7 +20,7 @@ ProcessoSeletivoG4Flex/
 │       ├── core/         # Cores, tema, snackbar
 │       ├── models/       # Campeonato, Equipe, Plano, Torcedor, Jogo
 │       ├── services/     # ApiService (HTTP + UTF-8)
-│       └── views/        # Telas (home, campeonatos, equipes, planos, torcedores, jogos)
+│       └── views/        # Telas (home, campeonatos, equipes, planos, torcedores, jogos, relatórios)
 └── database/             # Scripts SQL (schema, seed, reset)
 ```
 
@@ -31,7 +31,7 @@ ProcessoSeletivoG4Flex/
 | Backend  | Node.js, Express, PostgreSQL, `pg`, Helmet       |
 | Mobile   | Flutter 3.x, Material Design 3, Dark Mode        |
 | Database | PostgreSQL 14+, UUID como PK, Relações N:M             |
-| Testes   | Jest, Supertest (83 testes automatizados)         |
+| Testes   | Jest, Supertest (87 testes automatizados)         |
 
 ## Segurança
 
@@ -77,7 +77,7 @@ flutter run -d chrome     # ou flutter run (Android)
 ### 4. Testes
 ```bash
 cd backend
-npm test                  # 83 testes automatizados
+npm test                  # 87 testes automatizados
 ```
 
 ## API Endpoints
@@ -89,9 +89,9 @@ Base URL: `http://localhost:3000/api`
 | Método   | Rota              | Descrição                      |
 |----------|--------------------|---------------------------------|
 | `GET`    | `/equipes`         | Listar (suporta paginação)     |
-| `GET`    | `/equipes/:id`     | Buscar por ID (+ planos)       |
-| `POST`   | `/equipes`         | Criar (com plano_ids)          |
-| `PUT`    | `/equipes/:id`     | Atualizar (com plano_ids)      |
+| `GET`    | `/equipes/:id`     | Buscar por ID (+ planos + campeonatos) |
+| `POST`   | `/equipes`         | Criar (com plano_ids, campeonato_ids)  |
+| `PUT`    | `/equipes/:id`     | Atualizar (com plano_ids, campeonato_ids) |
 | `DELETE` | `/equipes/:id`     | Excluir (protege dependências) |
 
 ### Planos
@@ -139,14 +139,15 @@ Base URL: `http://localhost:3000/api`
 
 ### Utilitários
 
-| Método | Rota            | Descrição               |
-|--------|-----------------|--------------------------|
-| `GET`  | `/health`       | Status da API            |
-| `GET`  | `/contadores`   | Total de cada entidade   |
+| Método | Rota            | Descrição                                        |
+|--------|-----------------|--------------------------------------------------|
+| `GET`  | `/health`       | Status da API                                    |
+| `GET`  | `/contadores`   | Total de cada entidade                           |
+| `GET`  | `/relatorios`   | Distribuição etária, equipes e jogos por campeonato |
 
 ## Testes Automatizados
 
-83 testes organizados em 9 categorias:
+87 testes organizados em 11 categorias:
 
 | Categoria               | Testes |
 |--------------------------|--------|
@@ -156,9 +157,11 @@ Base URL: `http://localhost:3000/api`
 | CRUD Equipes             | 12     |
 | CRUD Torcedores          | 18     |
 | CRUD Campeonatos         | 10     |
+| Equipes + Campeonatos    | 3      |
 | CRUD Jogos               | 16     |
+| Relatórios               | 1      |
 | Exclusão em Cascata      | 3      |
 | Exclusão + Cleanup       | 6      |
-| **Total**                | **83** |
+| **Total**                | **87** |
 
-Cobertura: CRUD completo (com Campeonatos N:M), GET por ID para todas entidades, validação de inputs, integridade referencial com bloqueios em cascata restritivos, paginação, acentos UTF-8, lógica de pontos e jogos intra-campeonato.
+Cobertura: CRUD completo (com Campeonatos N:M), GET por ID para todas entidades, validação de inputs, integridade referencial com bloqueios em cascata restritivos, paginação, acentos UTF-8, lógica de pontos e jogos intra-campeonato, relatórios agregados.

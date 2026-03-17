@@ -286,7 +286,7 @@ class _HomeViewState extends State<HomeView>
             ),
             const SizedBox(height: 8),
             Text(
-              'Aplicação CRUD para gerenciamento de equipes esportivas, planos de sócio-torcedor, torcedores e jogos.',
+              'Aplicação para gerenciamento de equipes esportivas, planos de sócio-torcedor, torcedores, jogos, campeonatos e relatórios estatísticos.',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,
@@ -369,7 +369,7 @@ class _HomeViewState extends State<HomeView>
         ),
         const SizedBox(height: 8),
         Text(
-          'Gerencie equipes, planos, torcedores, jogos e campeonatos',
+          'Gerencie equipes, planos, torcedores, jogos, campeonatos e relatórios',
           style: TextStyle(
             fontSize: 16,
             color: Theme.of(ctx).colorScheme.onSurfaceVariant,
