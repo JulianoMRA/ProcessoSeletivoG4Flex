@@ -11,6 +11,7 @@ const planosRoutes = require('./routes/planos');
 const torcedoresRoutes = require('./routes/torcedores');
 const jogosRoutes = require('./routes/jogos');
 const campeonatosRoutes = require('./routes/campeonatos');
+const relatoriosRoutes = require('./routes/relatorios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,6 +48,7 @@ app.use('/api/planos', planosRoutes);
 app.use('/api/torcedores', torcedoresRoutes);
 app.use('/api/jogos', jogosRoutes);
 app.use('/api/campeonatos', campeonatosRoutes);
+app.use('/api/relatorios', relatoriosRoutes);
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
