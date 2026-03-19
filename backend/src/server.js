@@ -18,7 +18,10 @@ const PORT = process.env.PORT || 3000;
 
 // Segurança
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: /^http:\/\/localhost(:\d+)?$/,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(express.json({ limit: '1mb' }));
 
 // Forçar charset UTF-8 em todas as respostas JSON
