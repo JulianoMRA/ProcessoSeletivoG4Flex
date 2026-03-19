@@ -315,7 +315,7 @@ A tela exibe:
 
 ## Seed Data
 
-O arquivo [database/seed.sql](file:///c:/Users/julia/OneDrive/Documentos/GitHub/ProcessoSeletivoG4Flex/database/seed.sql) popula o banco com dados realistas:
+O arquivo [database/seed.sql](../database/seed.sql) popula o banco com dados realistas:
 
 | Entidade | Quantidade | Destaque |
 |----------|-----------|----------|

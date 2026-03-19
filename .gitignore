@@ -2,6 +2,11 @@
 /backend/node_modules/
 /backend/.env
 /backend/*.log
+/backend/*.txt
+
+# Mobile Flutter artifacts
+/mobile/*.log
+/mobile/*.txt
 
 # Mobile Flutter  
 /mobile/.dart_tool/
