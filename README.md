@@ -6,11 +6,11 @@ Sistema de gestão de sócios-torcedores para clubes de futebol. Permite cadastr
 
 ## Tecnologias
 
-| Camada    | Stack                                      |
-|-----------|--------------------------------------------|
-| Backend   | Node.js 20+, Express 4, PostgreSQL 14+     |
-| Frontend  | Flutter 3.x, Material Design 3             |
-| Testes    | Jest + Supertest — 87 testes automatizados |
+| Camada    | Stack                                                         |
+|-----------|---------------------------------------------------------------|
+| Backend   | Node.js 20+, Express 4, PostgreSQL 14+                        |
+| Frontend  | Flutter 3.x, Material Design 3, Inter (Google Fonts)          |
+| Testes    | Jest + Supertest — 87 testes automatizados                    |
 
 ---
 
@@ -73,7 +73,7 @@ npm run dev            # API disponível em http://localhost:3000
 
 ```bash
 cd mobile
-flutter pub get
+flutter pub get        # instala dependências, incluindo google_fonts (Inter)
 flutter run -d chrome  # Web — ou: flutter run (Android)
 ```
 

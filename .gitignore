@@ -7,12 +7,22 @@
 # Mobile Flutter artifacts
 /mobile/*.log
 /mobile/*.txt
-
-# Mobile Flutter  
 /mobile/.dart_tool/
 /mobile/build/
 /mobile/.flutter-plugins
 /mobile/.flutter-plugins-dependencies
+
+# Mobile — generated and cache files
+/mobile/.pub-cache/
+/mobile/**/*.g.dart
+/mobile/**/*.freezed.dart
+
+# Mobile — Android/iOS build artifacts
+/mobile/android/.gradle/
+/mobile/android/local.properties
+/mobile/ios/.symlinks/
+/mobile/ios/Pods/
+/mobile/ios/Flutter/flutter_export_environment.sh
 
 # Database
 *.db
@@ -21,3 +31,5 @@
 .DS_Store
 .idea/
 *.iml
+.vscode/
+.claude/

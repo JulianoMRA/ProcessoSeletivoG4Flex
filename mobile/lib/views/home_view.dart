@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:fala_torcedor/core/colors.dart';
 import 'package:fala_torcedor/main.dart';
@@ -91,10 +92,16 @@ class _HomeViewState extends State<HomeView>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
                     _buildHeader(ctx),
                     const SizedBox(height: 24),
-                    _buildMenuCards(context),
+                    _buildStatsStrip(context),
+                    const SizedBox(height: 28),
+                    _buildSectionLabel(context, 'MÓDULOS'),
+                    const SizedBox(height: 14),
+                    _buildGrid(context),
+                    const SizedBox(height: 12),
+                    _buildFeaturedCards(context),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -105,6 +112,268 @@ class _HomeViewState extends State<HomeView>
       ),
     );
   }
+
+  // ======================== HEADER ========================
+
+  Widget _buildHeader(BuildContext ctx) {
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => Scaffold.of(ctx).openDrawer(),
+          icon: const Icon(Icons.menu_rounded),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(ctx).colorScheme.outlineVariant,
+            foregroundColor: Theme.of(ctx).colorScheme.onSurface,
+            padding: const EdgeInsets.all(12),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${_saudacao()}!',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                'Fala, Torcedor!',
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(ctx).colorScheme.onSurface,
+                  letterSpacing: -0.8,
+                  height: 1.15,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ListenableBuilder(
+          listenable: themeProvider,
+          builder: (_, _) => IconButton(
+            onPressed: () => themeProvider.toggle(),
+            icon: Icon(
+              themeProvider.isDark
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.outlineVariant,
+              foregroundColor: Theme.of(ctx).colorScheme.onSurface,
+              padding: const EdgeInsets.all(12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ======================== STATS STRIP ========================
+
+  Widget _buildStatsStrip(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildStatItem(
+            context,
+            '${_contadores['equipes'] ?? 0}',
+            'Equipes',
+            Icons.shield_rounded,
+            AppColors.primary,
+          ),
+          _buildStatDivider(context),
+          _buildStatItem(
+            context,
+            '${_contadores['torcedores'] ?? 0}',
+            'Torcedores',
+            Icons.people_rounded,
+            AppColors.secondary,
+          ),
+          _buildStatDivider(context),
+          _buildStatItem(
+            context,
+            '${_contadores['jogos'] ?? 0}',
+            'Jogos',
+            Icons.sports_score_rounded,
+            AppColors.jogos,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context,
+    String valor,
+    String label,
+    IconData icon,
+    Color cor,
+  ) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: cor, size: 18),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            valor,
+            style: GoogleFonts.inter(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.onSurface,
+              letterSpacing: -0.5,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatDivider(BuildContext context) {
+    return Container(
+      height: 44,
+      width: 1,
+      color: Theme.of(context).colorScheme.outlineVariant,
+    );
+  }
+
+  // ======================== SECTION LABEL ========================
+
+  Widget _buildSectionLabel(BuildContext context, String label) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  // ======================== 2-COLUMN GRID ========================
+
+  Widget _buildGrid(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _CompactCard(
+                icon: Icons.shield_rounded,
+                title: 'Equipes',
+                contador: _contadores['equipes'],
+                gradient: [AppColors.primary, AppColors.primaryLight],
+                onTap: () => _navegarPara(context, const EquipesListView()),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _CompactCard(
+                icon: Icons.people_rounded,
+                title: 'Torcedores',
+                contador: _contadores['torcedores'],
+                gradient: [AppColors.secondary, AppColors.secondaryLight],
+                onTap: () => _navegarPara(context, const TorcedoresListView()),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _CompactCard(
+                icon: Icons.card_membership_rounded,
+                title: 'Planos',
+                contador: _contadores['planos'],
+                gradient: [AppColors.accent, AppColors.accentLight],
+                onTap: () => _navegarPara(context, const PlanosListView()),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _CompactCard(
+                icon: Icons.sports_score_rounded,
+                title: 'Jogos',
+                contador: _contadores['jogos'],
+                gradient: [AppColors.jogos, AppColors.jogosLight],
+                onTap: () => _navegarPara(context, const JogosListView()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ======================== FEATURED FULL-WIDTH CARDS ========================
+
+  Widget _buildFeaturedCards(BuildContext context) {
+    return Column(
+      children: [
+        _MenuCard(
+          icon: Icons.emoji_events_rounded,
+          title: 'Campeonatos',
+          subtitle: 'Criar e gerenciar campeonatos',
+          contador: _contadores['campeonatos'],
+          gradient: [AppColors.campeonatos, AppColors.campeonatosLight],
+          onTap: () => _navegarPara(context, const CampeonatosListView()),
+        ),
+        const SizedBox(height: 12),
+        _MenuCard(
+          icon: Icons.bar_chart_rounded,
+          title: 'Relatórios',
+          subtitle: 'Estatísticas e gráficos interativos',
+          gradient: [AppColors.relatorios, AppColors.relatoriosLight],
+          featured: true,
+          onTap: () => _navegarPara(context, const RelatoriosView()),
+        ),
+      ],
+    );
+  }
+
+  // ======================== NAVIGATION ========================
+
+  void _navegarPara(BuildContext context, Widget pagina) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => pagina));
+    _carregarContadores();
+  }
+
+  // ======================== DRAWER ========================
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
@@ -136,9 +405,9 @@ class _HomeViewState extends State<HomeView>
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Fala, Torcedor!',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -206,9 +475,9 @@ class _HomeViewState extends State<HomeView>
                     : Icons.light_mode_rounded,
                 color: AppColors.primary,
               ),
-              title: const Text(
+              title: Text(
                 'Modo escuro',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
               value: themeProvider.isDark,
               onChanged: (_) => themeProvider.toggle(),
@@ -237,7 +506,7 @@ class _HomeViewState extends State<HomeView>
       leading: Icon(icon, color: AppColors.primary),
       title: Text(
         label,
-        style: TextStyle(
+        style: GoogleFonts.inter(
           fontWeight: FontWeight.w600,
           color: Theme.of(context).colorScheme.onSurface,
         ),
@@ -246,11 +515,6 @@ class _HomeViewState extends State<HomeView>
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
     );
-  }
-
-  void _navegarPara(BuildContext context, Widget pagina) async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => pagina));
-    _carregarContadores();
   }
 
   void _mostrarSobre(BuildContext context) {
@@ -273,16 +537,19 @@ class _HomeViewState extends State<HomeView>
               ),
             ),
             const SizedBox(width: 12),
-            const Text('Sobre', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text('Sobre'),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Fala, Torcedor!',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -294,9 +561,12 @@ class _HomeViewState extends State<HomeView>
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Processo Seletivo G4 Flex',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -323,157 +593,134 @@ class _HomeViewState extends State<HomeView>
       ),
     );
   }
+}
 
-  Widget _buildHeader(BuildContext ctx) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            IconButton(
-              onPressed: () => Scaffold.of(ctx).openDrawer(),
-              icon: const Icon(Icons.menu_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.outlineVariant,
-                foregroundColor: Theme.of(ctx).colorScheme.onSurface,
-                padding: const EdgeInsets.all(12),
+// ======================== COMPACT CARD (2-column grid) ========================
+
+class _CompactCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final int? contador;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _CompactCard({
+    required this.icon,
+    required this.title,
+    this.contador,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  State<_CompactCard> createState() => _CompactCardState();
+}
+
+class _CompactCardState extends State<_CompactCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          height: 120,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: cs.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const Spacer(),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${_saudacao()}!',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: widget.gradient,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(widget.icon, color: Colors.white, size: 20),
+                  ),
+                  const Spacer(),
+                  if (widget.contador != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: widget.gradient[0].withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${widget.contador}',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: widget.gradient[0],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Fala, Torcedor!',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: Theme.of(ctx).colorScheme.onSurface,
-                letterSpacing: -1,
-                height: 1.1,
+              const Spacer(),
+              Text(
+                widget.title,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Gerencie equipes, planos, torcedores, jogos, campeonatos e relatórios',
-          style: TextStyle(
-            fontSize: 16,
-            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Text(
+                    'Ver todos',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: widget.gradient[0],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 11,
+                    color: widget.gradient[0],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildMenuCards(BuildContext context) {
-    return Column(
-      children: [
-        _MenuCard(
-          icon: Icons.shield_rounded,
-          title: 'Equipes',
-          subtitle: 'Cadastrar e gerenciar equipes',
-          contador: _contadores['equipes'],
-          gradient: [AppColors.primary, AppColors.primaryLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const EquipesListView()),
-            );
-            _carregarContadores();
-          },
-        ),
-        const SizedBox(height: 16),
-        _MenuCard(
-          icon: Icons.people_rounded,
-          title: 'Torcedores',
-          subtitle: 'Cadastrar e gerenciar torcedores',
-          contador: _contadores['torcedores'],
-          gradient: [AppColors.secondary, AppColors.secondaryLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const TorcedoresListView()),
-            );
-            _carregarContadores();
-          },
-        ),
-        const SizedBox(height: 16),
-        _MenuCard(
-          icon: Icons.card_membership_rounded,
-          title: 'Planos',
-          subtitle: 'Gerenciar planos de sócio',
-          contador: _contadores['planos'],
-          gradient: [AppColors.accent, AppColors.accentLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PlanosListView()),
-            );
-            _carregarContadores();
-          },
-        ),
-        const SizedBox(height: 16),
-        _MenuCard(
-          icon: Icons.sports_score_rounded,
-          title: 'Jogos',
-          subtitle: 'Registrar e consultar jogos',
-          contador: _contadores['jogos'],
-          gradient: [AppColors.jogos, AppColors.jogosLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const JogosListView()),
-            );
-            _carregarContadores();
-          },
-        ),
-        const SizedBox(height: 16),
-        _MenuCard(
-          icon: Icons.emoji_events_rounded,
-          title: 'Campeonatos',
-          subtitle: 'Criar e gerenciar campeonatos',
-          contador: _contadores['campeonatos'],
-          gradient: [AppColors.campeonatos, AppColors.campeonatosLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CampeonatosListView()),
-            );
-            _carregarContadores();
-          },
-        ),
-        const SizedBox(height: 16),
-        _MenuCard(
-          icon: Icons.bar_chart_rounded,
-          title: 'Relatórios',
-          subtitle: 'Visualizar estatísticas e gráficos',
-          gradient: [AppColors.relatorios, AppColors.relatoriosLight],
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const RelatoriosView()),
-            );
-            _carregarContadores();
-          },
-        ),
-      ],
+      ),
     );
   }
 }
+
+// ======================== MENU CARD (full-width) ========================
 
 class _MenuCard extends StatefulWidget {
   final IconData icon;
@@ -482,6 +729,7 @@ class _MenuCard extends StatefulWidget {
   final int? contador;
   final List<Color> gradient;
   final VoidCallback onTap;
+  final bool featured;
 
   const _MenuCard({
     required this.icon,
@@ -490,6 +738,7 @@ class _MenuCard extends StatefulWidget {
     this.contador,
     required this.gradient,
     required this.onTap,
+    this.featured = false,
   });
 
   @override
@@ -512,28 +761,49 @@ class _MenuCardState extends State<_MenuCard> {
         duration: const Duration(milliseconds: 100),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cs.outlineVariant),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
+          decoration: widget.featured
+              ? BoxDecoration(
                   gradient: LinearGradient(
                     colors: widget.gradient,
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.gradient[0].withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                )
+              : BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: cs.outlineVariant),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: widget.featured
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : null,
+                  gradient: widget.featured
+                      ? null
+                      : LinearGradient(
+                          colors: widget.gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 26),
@@ -545,18 +815,20 @@ class _MenuCardState extends State<_MenuCard> {
                   children: [
                     Text(
                       widget.title,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
+                        color: widget.featured ? Colors.white : cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.subtitle,
                       style: TextStyle(
-                        fontSize: 14,
-                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
+                        color: widget.featured
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -570,11 +842,16 @@ class _MenuCardState extends State<_MenuCard> {
                   ),
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: widget.gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: widget.featured
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : null,
+                    gradient: widget.featured
+                        ? null
+                        : LinearGradient(
+                            colors: widget.gradient,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -589,13 +866,15 @@ class _MenuCardState extends State<_MenuCard> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: cs.outlineVariant,
+                  color: widget.featured
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : cs.outlineVariant,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.arrow_forward_rounded,
                   size: 18,
-                  color: cs.onSurfaceVariant,
+                  color: widget.featured ? Colors.white : cs.onSurfaceVariant,
                 ),
               ),
             ],

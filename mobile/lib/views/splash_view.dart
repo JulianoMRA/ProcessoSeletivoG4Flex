@@ -98,57 +98,71 @@ class _SplashViewState extends State<SplashView> with TickerProviderStateMixin {
             ],
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _logoController,
-              builder: (_, child) => Transform.scale(
-                scale: _logoScale.value,
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Icon(
-                    Icons.sports_soccer_rounded,
-                    size: 64 * _logoBounce.value,
-                    color: Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const Spacer(),
+              AnimatedBuilder(
+                animation: _logoController,
+                builder: (_, child) => Transform.scale(
+                  scale: _logoScale.value,
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Icon(
+                      Icons.sports_soccer_rounded,
+                      size: 64 * _logoBounce.value,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            SlideTransition(
-              position: _textSlide,
-              child: FadeTransition(
-                opacity: _textFade,
-                child: Column(
-                  children: [
-                    const Text(
-                      'Fala, Torcedor!',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -1,
+              const SizedBox(height: 32),
+              SlideTransition(
+                position: _textSlide,
+                child: FadeTransition(
+                  opacity: _textFade,
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Fala, Torcedor!',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -1,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Gestão de sócios-torcedores',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Gestão de sócios-torcedores',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(48, 0, 48, 32),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    minHeight: 3,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

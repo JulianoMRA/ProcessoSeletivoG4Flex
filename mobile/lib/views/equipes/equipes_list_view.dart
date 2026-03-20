@@ -435,9 +435,31 @@ class _EquipeCard extends StatelessWidget {
 
   const _EquipeCard({required this.equipe, required this.onTap});
 
+  String _initials(String nome) {
+    final words = nome.trim().split(RegExp(r'\s+'));
+    if (words.length >= 2) {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
+    }
+    return nome.substring(0, nome.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  Color _colorFromName(String nome) {
+    const palette = [
+      AppColors.primary,
+      AppColors.secondary,
+      AppColors.accent,
+      AppColors.jogos,
+      AppColors.campeonatos,
+      AppColors.relatorios,
+    ];
+    final hash = nome.codeUnits.fold(0, (a, b) => a + b);
+    return palette[hash % palette.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final avatarColor = _colorFromName(equipe.nome);
 
     return Card(
       child: InkWell(
@@ -448,12 +470,27 @@ class _EquipeCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: avatarColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: avatarColor.withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
                 ),
-                child: const Icon(Icons.shield_rounded, color: AppColors.primary, size: 24),
+                child: Center(
+                  child: Text(
+                    _initials(equipe.nome),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: avatarColor,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
