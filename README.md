@@ -1,58 +1,46 @@
 # Fala, Torcedor!
 
-Sistema de gestão de sócios-torcedores para clubes de futebol. Permite cadastrar equipes, planos de associação, torcedores, campeonatos e jogos, além de exibir relatórios estatísticos com gráficos interativos.
+Sistema para cadastrar equipes, planos de associação, torcedores, campeonatos e jogos, e visualizar relatórios agregados sobre essa base. Projeto feito como parte de um processo seletivo da G4Flex.
 
----
+## Stack
 
-## Tecnologias
+O backend é Node.js com Express porque a API é um CRUD direto sobre PostgreSQL e não justificava um framework mais opinativo. Uso `pg` com queries parametrizadas em vez de um ORM — o schema é pequeno o bastante para que SQL escrito à mão seja mais legível do que configurar relações em código. `helmet`, `cors` restrito a `localhost` e `express-rate-limit` entram como camadas básicas de proteção. PostgreSQL foi escolhido pelas relações N:M (equipes × campeonatos, equipes × planos) e pelo suporte nativo a `UUID`.
 
-| Camada    | Stack                                                         |
-|-----------|---------------------------------------------------------------|
-| Backend   | Node.js 20+, Express 4, PostgreSQL 14+                        |
-| Frontend  | Flutter 3.x, Material Design 3, Inter (Google Fonts)          |
-| Testes    | Jest + Supertest — 87 testes automatizados                    |
+O app é Flutter para sair com um único código-base rodando em Web e Android. Estado é gerenciado com `ChangeNotifier` — não há fluxo assíncrono complexo que justifique Bloc ou Riverpod. `fl_chart` cuida dos gráficos dos relatórios, `google_fonts` carrega Inter, e `mask_text_input_formatter` formata CPF e datas nos formulários.
 
----
+Os testes do backend usam Jest com Supertest, rodando contra o banco real (não há mocks do `pg`) — a ideia é pegar regressões em constraints, transações e queries, que é onde a maior parte dos bugs aparece.
 
-## Estrutura do Projeto
+## Estrutura
 
 ```
-ProcessoSeletivoG4Flex/
+.
 ├── backend/
 │   ├── src/
-│   │   ├── config/        # Conexão com o banco de dados (pool UTF-8)
-│   │   ├── controllers/   # Lógica de negócio (6 controllers)
-│   │   ├── middleware/    # Validação de UUID
-│   │   ├── routes/        # Rotas da API (6 entidades)
-│   │   └── server.js      # Entry point — middlewares de segurança e rotas
-│   ├── tests/             # Testes automatizados (Jest + Supertest)
-│   └── .env.example       # Template de variáveis de ambiente
+│   │   ├── config/        # pool do PostgreSQL (UTF-8 forçado)
+│   │   ├── controllers/   # um por entidade
+│   │   ├── middleware/    # validação de UUID
+│   │   ├── routes/        # equipes, planos, torcedores, campeonatos, jogos, relatórios
+│   │   └── server.js
+│   ├── tests/
+│   └── .env.example
 ├── mobile/
 │   └── lib/
-│       ├── controllers/   # Gerenciamento de estado (ChangeNotifier)
-│       ├── core/          # Design system — cores, tema, componentes globais
-│       ├── models/        # Entidades: Equipe, Plano, Torcedor, Campeonato, Jogo
-│       ├── services/      # Cliente HTTP centralizado
-│       └── views/         # Telas — home, formulários, detalhes, relatórios
+│       ├── controllers/   # ChangeNotifier por entidade
+│       ├── core/          # tema, cores, componentes compartilhados
+│       ├── models/
+│       ├── services/      # cliente HTTP
+│       └── views/         # home, splash e uma pasta por entidade
 └── database/
-    ├── schema.sql          # Criação de tabelas e constraints
-    ├── seed.sql            # Dados de exemplo (equipes, torcedores, jogos...)
-    └── reset.sql           # Drop e recriação do schema
+    ├── schema.sql
+    ├── seed.sql
+    └── reset.sql
 ```
 
----
+## Rodando localmente
 
-## Pré-requisitos
+Pré-requisitos: Node.js 20+, PostgreSQL 14+ e Flutter 3.x.
 
-- [Node.js 20+](https://nodejs.org)
-- [PostgreSQL 14+](https://www.postgresql.org)
-- [Flutter 3.x](https://flutter.dev) (com suporte a Web ou Android)
-
----
-
-## Como Executar
-
-### 1. Banco de Dados
+Banco:
 
 ```bash
 createdb fala_torcedor
@@ -60,131 +48,41 @@ psql -d fala_torcedor -f database/schema.sql
 psql -d fala_torcedor -f database/seed.sql
 ```
 
-### 2. Backend
+Backend:
 
 ```bash
 cd backend
-cp .env.example .env   # preencha DB_PASSWORD com sua senha do PostgreSQL
+cp .env.example .env   # preencha DB_PASSWORD
 npm install
-npm run dev            # API disponível em http://localhost:3000
+npm run dev            # http://localhost:3000
 ```
 
-### 3. Frontend
+App:
 
 ```bash
 cd mobile
-flutter pub get        # instala dependências, incluindo google_fonts (Inter)
-flutter run -d chrome  # Web — ou: flutter run (Android)
+flutter pub get
+flutter run -d chrome  # ou: flutter run (Android)
 ```
 
-### 4. Testes
-
-```bash
-cd backend
-npm test               # executa os 87 testes automatizados
-```
-
----
+Testes do backend rodam com `npm test` dentro de `backend/` — exigem o banco populado pelo seed.
 
 ## API
 
-**Base URL:** `http://localhost:3000/api`
+Base: `http://localhost:3000/api`.
 
-### Equipes
+Há seis grupos de rotas — `/equipes`, `/planos`, `/torcedores`, `/campeonatos`, `/jogos` e `/relatorios` — além de `/health` e `/contadores`. Cada entidade expõe CRUD completo; filtros por query string estão disponíveis em `/planos?equipe_id=…`, `/jogos?equipe_id=…` e `/jogos?campeonato_id=…`. `/torcedores/verificar-cpf?cpf=…` responde se um CPF já está cadastrado. `/relatorios` devolve os sete agregados consumidos pela tela de relatórios do app, todos calculados em paralelo.
 
-| Método   | Rota           | Descrição                                      |
-|----------|----------------|------------------------------------------------|
-| `GET`    | `/equipes`     | Listar todas (suporta paginação)               |
-| `GET`    | `/equipes/:id` | Buscar por ID — inclui planos e campeonatos    |
-| `POST`   | `/equipes`     | Criar — aceita `plano_ids` e `campeonato_ids`  |
-| `PUT`    | `/equipes/:id` | Atualizar — aceita `plano_ids` e `campeonato_ids` |
-| `DELETE` | `/equipes/:id` | Excluir — bloqueado se houver torcedores ou jogos |
+Exclusões são bloqueadas com `409 Conflict` quando há dependências (equipe com torcedores ou jogos, plano com torcedores, campeonato com jogos). IDs malformados são rejeitados com `400` antes de chegar ao controller.
 
-### Planos
+## Manutenção
 
-| Método   | Rota                       | Descrição                       |
-|----------|----------------------------|---------------------------------|
-| `GET`    | `/planos`                  | Listar todos                    |
-| `GET`    | `/planos?equipe_id=<uuid>` | Filtrar por equipe              |
-| `GET`    | `/planos/:id`              | Buscar por ID                   |
-| `POST`   | `/planos`                  | Criar                           |
-| `PUT`    | `/planos/:id`              | Atualizar                       |
-| `DELETE` | `/planos/:id`              | Excluir — bloqueado se houver torcedores |
+**Adicionar uma entidade nova no backend** implica um arquivo em cada uma das pastas `controllers/`, `routes/` e `tests/`, e registrar a rota em [backend/src/server.js](backend/src/server.js). O schema vai em [database/schema.sql](database/schema.sql); se a entidade tem relação com outras, atualize também [database/seed.sql](database/seed.sql) para os testes continuarem passando.
 
-### Torcedores
+**Adicionar uma entidade nova no app** segue o mesmo padrão: um `model`, um `controller` (`ChangeNotifier`), métodos no `services/api_service.dart`, e uma pasta em `views/` com as telas de lista, formulário e detalhe. A navegação principal está em [mobile/lib/views/home_view.dart](mobile/lib/views/home_view.dart) — é lá que o card novo entra.
 
-| Método   | Rota                                  | Descrição                          |
-|----------|---------------------------------------|------------------------------------|
-| `GET`    | `/torcedores`                         | Listar todos — inclui equipe e plano via JOIN |
-| `GET`    | `/torcedores/:id`                     | Buscar por ID                      |
-| `GET`    | `/torcedores/verificar-cpf?cpf=<cpf>` | Verificar unicidade do CPF         |
-| `POST`   | `/torcedores`                         | Criar — valida formato do CPF      |
-| `PUT`    | `/torcedores/:id`                     | Atualizar                          |
-| `DELETE` | `/torcedores/:id`                     | Excluir — decrementa `qtd_socios`  |
+**Relatórios** são definidos em [backend/src/routes/relatorios.js](backend/src/routes/relatorios.js) (uma query SQL por item) e consumidos em [mobile/lib/views/relatorios](mobile/lib/views/relatorios). Novo gráfico = nova query no backend + novo widget `fl_chart` no app.
 
-### Campeonatos
+**Cores, tema e componentes compartilhados** do app ficam em [mobile/lib/core](mobile/lib/core). Qualquer ajuste visual global começa por ali.
 
-| Método   | Rota               | Descrição                                        |
-|----------|--------------------|--------------------------------------------------|
-| `GET`    | `/campeonatos`     | Listar todos (suporta paginação)                 |
-| `GET`    | `/campeonatos/:id` | Buscar por ID — inclui equipes participantes (N:M) |
-| `POST`   | `/campeonatos`     | Criar — requer ao menos 2 `equipe_ids`           |
-| `PUT`    | `/campeonatos/:id` | Atualizar — aceita `equipe_ids`                  |
-| `DELETE` | `/campeonatos/:id` | Excluir — bloqueado se houver jogos              |
-
-### Jogos
-
-| Método   | Rota                          | Descrição                         |
-|----------|-------------------------------|-----------------------------------|
-| `GET`    | `/jogos`                      | Listar todos                      |
-| `GET`    | `/jogos?equipe_id=<uuid>`     | Filtrar por equipe                |
-| `GET`    | `/jogos?campeonato_id=<uuid>` | Filtrar por campeonato            |
-| `GET`    | `/jogos/:id`                  | Buscar por ID                     |
-| `POST`   | `/jogos`                      | Criar — valida gols ≥ 0 e equipes no campeonato |
-| `PUT`    | `/jogos/:id`                  | Atualizar                         |
-| `DELETE` | `/jogos/:id`                  | Excluir                           |
-
-### Utilitários
-
-| Método | Rota          | Descrição                                                   |
-|--------|---------------|-------------------------------------------------------------|
-| `GET`  | `/health`     | Status da API                                               |
-| `GET`  | `/contadores` | Total de registros por entidade                             |
-| `GET`  | `/relatorios` | 7 relatórios agregados em paralelo (distribuição etária, desempenho por equipe, jogos e equipes por campeonato, torcedores por equipe e por plano, KPIs gerais) |
-
----
-
-## Testes Automatizados
-
-87 testes organizados em 11 categorias, cobrindo CRUD completo, relacionamentos N:M, validações de entrada, integridade referencial, proteções de exclusão em cascata, paginação, suporte a UTF-8 e relatórios agregados.
-
-| Categoria              | Testes |
-|------------------------|--------|
-| Health + Contadores    | 2      |
-| Validação UUID         | 2      |
-| CRUD Planos            | 14     |
-| CRUD Equipes           | 12     |
-| CRUD Torcedores        | 18     |
-| CRUD Campeonatos       | 10     |
-| Equipes + Campeonatos  | 3      |
-| CRUD Jogos             | 16     |
-| Relatórios             | 1      |
-| Exclusão em Cascata    | 3      |
-| Exclusão + Cleanup     | 6      |
-| **Total**              | **87** |
-
----
-
-## Segurança
-
-| Medida              | Descrição                                                   |
-|---------------------|-------------------------------------------------------------|
-| Helmet              | Headers de segurança HTTP (CSP, X-Content-Type-Options etc.)|
-| CORS                | Restrito a origens `localhost`                              |
-| Rate Limiting       | 500 requisições por IP a cada 15 minutos                    |
-| Body Size Limit     | Máximo de 1 MB por requisição                               |
-| UUID Validation     | Middleware rejeita IDs malformados com `400 Bad Request`    |
-| Queries Parametrizadas | Eliminação de SQL Injection via `$1, $2...`              |
-| Transações SQL      | `BEGIN / COMMIT / ROLLBACK` em operações multi-tabela       |
-| Cascade Protection  | Exclusão bloqueada quando há dependências (`409 Conflict`)  |
-| UTF-8 End-to-End    | `client_encoding` no PostgreSQL + `charset` nas respostas  |
+Não há pipeline de deploy configurado — o projeto roda localmente. A `URL` da API usada pelo app está em [mobile/lib/services](mobile/lib/services) e é o ponto a alterar caso o backend passe a rodar em outro host.
